@@ -166,3 +166,17 @@ Follow-up:
 **Prompt:**
 > We are in search for SoTA of <discipline>.
 > Using G.2 and G.4, extract: (a) TraditionCards for competing schools of thought; (b) OperatorCards for their main operators / update rules; (c) a first draft of a SoTA Pack and selector-ready portfolio. This is expected to be a long text, therefore start with only TraditionCards.
+
+## 🤝 Contributing
+
+### Pull Request Policy
+
+**Do NOT create pull requests directly on the original repository.**
+
+Contributors must:
+1. **Fork** this repository to your own GitHub account
+2. **Create** your feature branch in your fork
+3. **Push** changes to your fork
+4. **Open** a pull request from your fork to the original repository
+
+PRs created from branches within the original repository (instead of from forks) will be closed without review.
