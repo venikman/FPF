@@ -69,103 +69,61 @@ FPF is built on a micro-kernel of non-negotiable principles. If you are new, sta
 
 ## 📂 Repository Structure
 
-The specification is divided into clusters of patterns:
+```
+FPF/
+├── FPF-Spec.md              # Complete specification (single file)
+├── Readme.md                # This file
+├── docs/
+│   ├── 00-toc.md            # Table of Contents
+│   ├── 01-preface.md        # Preface (non-normative)
+│   └── parts/
+│       ├── part-a-kernel-architecture.md
+│       ├── part-b-transdisciplinary-reasoning.md
+│       ├── part-c-architheory-specifications.md
+│       ├── part-d-ethics-conflict.md
+│       ├── part-e-constitution-authoring.md
+│       ├── part-f-unification-suite.md
+│       └── part-g-discipline-sota-kit.md
+├── prompts/                 # LLM prompt templates
+│   ├── 01-characterisation-indicators.md
+│   ├── 02-uts-domain.md
+│   ├── 03-naming-cards.md
+│   ├── 04-p2w-paths.md
+│   └── 05-sota-harvesting.md
+└── examples/                # Worked examples (coming soon)
+```
 
-### **Part A: Kernel Architecture Cluster**
-The immutable ontological core.
-*   **Ontology:** Holons, Systems, Epistemes, and Bounded Contexts.
-*   **Transformation:** The `Transformer` quartet (Agent, Method, Description, Work).
-*   **State Space:** Characteristics, Scales, and Dynamics.
+### Specification Parts
 
-### **Part B: Trans-disciplinary Reasoning Cluster**
-The logic of composition and trust.
-*   **$\Gamma$ Algebra:** How to aggregate systems (`Γ_sys`), knowledge (`Γ_epist`), and resources (`Γ_work`).
-*   **Assurance:** The `F-G-R` calculus and evidence graphs.
-*   **Transduction Graph Architecture (E.TGA):** Eulerian graphs of flows and "from principles to work" (P2W) paths that make architectures of reasoning and work explicit.
-*   **Evolution:** The canonical loops for observing, refining, and deploying updates.
-
-### **Part C: Architheory Specifications**
-Pluggable domain-specific calculi (CAL), logics (LOG), and characterizations (CHR).
-*   **Sys-CAL:** Physics and conservation laws.
-*   **KD-CAL:** Knowledge dynamics and truth-maintenance.
-*   **NQD-CAL:** Novelty, Quality, and Diversity search.
-*   **Kind-CAL:** Typed reasoning and taxonomy.
-
-### **Part D: Ethics & Conflict-Optimisation**
-*   Multi-scale ethics (from agent to planetary).
-*   Bias audits and trust-aware mediation.
-
-### **Part E: Constitution & Authoring**
-The governance of the framework itself.
-*   **The 11 Pillars:** Constitutional invariants (e.g., *Cognitive Elegance*, *Didactic Primacy*).
-*   **Guard-Rails:** DevOps Lexical Firewall, Notational Independence.
-*   **MVPK:** Multi-View Publication Kit for generating consistent views/documents.
-
-### **Part F: The Unification Suite**
-Techniques for aligning vocabularies across disciplines using **SenseCells**, **Concept-Sets**, and **Alignment Bridges**.
-
-### **Part G: Discipline SoTA Kit**
-Tools for harvesting "State of the Art" (SoTA) knowledge, benchmarking methods, and creating selector-ready portfolios of solutions.
+| Part | Name | Description |
+|------|------|-------------|
+| **A** | Kernel Architecture | Holons, Systems, Epistemes, Bounded Contexts, Transformer quartet |
+| **B** | Trans-disciplinary Reasoning | Γ Algebra, F-G-R assurance, TGA, evolution loops |
+| **C** | Architheory Specifications | Sys-CAL, KD-CAL, NQD-CAL, Kind-CAL |
+| **D** | Ethics & Conflict-Optimisation | Multi-scale ethics, bias audits |
+| **E** | Constitution & Authoring | 11 Pillars, Guard-Rails, MVPK |
+| **F** | Unification Suite | SenseCells, Concept-Sets, Alignment Bridges |
+| **G** | Discipline SoTA Kit | SoTA harvesting, benchmarking, portfolios |
 
 > *"A principle that works in only one world is local folklore; a first principle architects every world."* — **Pattern A.8**
 
-## 🚀 Using FPF with LLMs (Worked Prompt Examples)
+## 🚀 Using FPF with LLMs
 
-FPF is designed to be loaded as a file into an LLM (ChatGPT, Gemini, local models with RAG, etc.) and then *asked to think with you* about concrete projects. There is no magic "prompt library" for FPF: what matters is your ability to have a rational conversation with the model about real problems, not memorise incantations. LLM+FPF will not "solve everything automatically": you remain the principal, the model is an agent that follows your problem framing and constraints.
+FPF is designed to be loaded as a file into an LLM (ChatGPT, Gemini, local models with RAG, etc.) and then *asked to think with you* about concrete projects. There is no magic "prompt library" for FPF: what matters is your ability to have a rational conversation with the model about real problems, not memorise incantations.
 
 In practice the most productive usage is not "summarise the spec", but "treat the spec as a grimoire": ask for concrete chains, patterns, UTS blocks, P2W paths and Q-bundles for your domain and iterate.
 
-Below are example prompts that have been used in practice; adapt them to your domain and language.
+### Prompt Templates
 
-### 1. Characterisation & indicators for a new project
+See the [`prompts/`](./prompts/) folder for ready-to-use prompt templates:
 
-**Goal:** get a step-by-step chain from “vague idea” to measurable characteristics, indicators, scoring and decision criteria.
-**Prompt:** 
-> You have the FPF specification loaded as a file.  
-> We are starting work on <brief description of project>, design has not yet begun.  
-> Propose a step-by-step chain for characterising the objects of our project, normalising measurements, defining indicators, scoring alternatives, and choosing design decisions.  
-> Include steps that I may have forgotten.  
-> Write in the language of engineer-managers, not in FPF jargon.*
-
-Typical follow-ups:
-* “Now take object <X> from this chain and work it through in detail: list 10–15 characteristics, their scales, indicators, and a rough dashboard format for decision-makers.”
-* “Show how this chain maps to P2W in E.TGA for this project.”
-
-### 2. UTS (Unified Term Sheet) for a domain
-
-**Goal:** build a disciplined vocabulary for a niche field using FPF Part F.
-**Prompt:**
-> You have the FPF specification loaded.  
-> Produce a Unified Term Sheet (UTS) block for the core terms of <your domain>: at least 10 rows.  
-> Use F.17 and F.18: distinguish Tech vs Plain names, show SenseCells for 2–3 key bounded contexts, and flag risky aliases.
-
-Follow-up for quantitative structure:
-* “For the same domain, propose a Q-bundle that captures the quality of <your object/process> and produce a UTS block for its characteristics (CHR) and indicators.”
-
-### 3. Naming via F.18 (Name Cards)
-
-**Goal:** design better names for roles, programs, artefacts when existing labels are misleading.
-**Prompt:**
-> Using F.18, develop a complete Name Card for what to call <current name of an Entity> in the following situation:  
-> <short narrative of current practice and complaints about existing name>  
-> Do not assume current names are correct; perform an honest search on the local Pareto-front of candidate names and explain trade-offs.
-
-### 4. P2W (from principles to work) paths with E.TGA
-
-**Goal:** make “from principles to work” explicit for a concrete project.
-**Prompt:**
-> Using E.TGA and TEVB, unpack the canonical P2W flow for my situation <describe your project>.  
-> Give the list of nodes (P1…Pn), their Kinds, and explain each node in engineer-manager language.
-
-Follow-up:
-* “Now build a mini Flow specification table for this P2W graph”.
-
-### 5. SoTA harvesting & discipline packs
-
-**Goal:** use Part G to organise a frontier discipline around first principles.
-**Prompt:**
-> We are in search for SoTA of <discipline>.
-> Using G.2 and G.4, extract: (a) TraditionCards for competing schools of thought; (b) OperatorCards for their main operators / update rules; (c) a first draft of a SoTA Pack and selector-ready portfolio. This is expected to be a long text, therefore start with only TraditionCards.
+| Prompt | Purpose |
+|--------|---------|
+| [01-characterisation-indicators](./prompts/01-characterisation-indicators.md) | From vague idea to measurable characteristics |
+| [02-uts-domain](./prompts/02-uts-domain.md) | Build disciplined vocabulary for a domain |
+| [03-naming-cards](./prompts/03-naming-cards.md) | Design better names via F.18 |
+| [04-p2w-paths](./prompts/04-p2w-paths.md) | Make "from principles to work" explicit |
+| [05-sota-harvesting](./prompts/05-sota-harvesting.md) | Organise SoTA for a discipline |
 
 ## 🤝 Contributing
 
