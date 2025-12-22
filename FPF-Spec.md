@@ -3527,9 +3527,11 @@ When **G** is a **set‑valued scope**, composition becomes precise: serial depe
 **USM** introduces:
 
 * **`U.ContextSlice`** — an addressable **slice of a bounded context** (terminology, parameter ranges, versions/Standards, and a mandatory **Γ\_time** selector). All scope checks are performed **on slices**.
-* **`U.Scope`** — the abstract **set‑valued scope characteristic** over `U.ContextSlice`.
+* **`U.Scope`** — the abstract **set‑valued scope object** over `U.ContextSlice`.
 * **Specializations:**
-  **`U.ClaimScope`** (nick **G**) on `U.Episteme` (“**where the claim holds**”), and **`U.WorkScope`** on `U.Capability` (“**where the capability can deliver Work at declared measures within qualification windows**”).
+  **`U.ClaimScope`** (nick **G**) on `U.Episteme` (“**where the claim holds**”),
+  **`U.WorkScope`** on `U.Capability` (“**where the capability can deliver Work at declared measures within qualification windows**”), and
+  **`U.PublicationScope`** on publication carriers (“**where the publication surface is admissible**”).
 * **One algebra:** serial **intersection**, parallel **SpanUnion** (only where supported), **translate** via Bridge (CL affects **R**, not **F/G**), and **widen / narrow / refit** operations for scope evolution.
 
 **Lexical commitments (normative):**
@@ -3537,6 +3539,69 @@ When **G** is a **set‑valued scope**, composition becomes precise: serial depe
 — Do **not** name the characteristic “applicability/envelope/generality/capability envelope/**publication applicability**/validity.” Those words are permitted only as explanatory aliases in notes.
 
 ### A.2.6:6 - Normative Definitions
+
+#### A.2.6:6.0 - USM as a `U.Mechanism.Intension` (normalization for A.6.1/A.6.5)
+
+**Intent.** This subsection makes the **USM** definition in A.2.6 explicitly conform to the
+`U.Mechanism` *intension* requirements (A.6.1) and the `…Slot` / `…Ref` lexical discipline (A.6.5),
+without changing USM’s meaning.
+
+**USM Mechanism.Intension (normative; A.6.1 decomposition).**
+
+* **Imports (USM).** `U.ContextSlice`, `U.ContextSliceSet`, Part B **Bridge/CL** (`U.Bridge`, `U.CongruenceLevel`), and `U.GammaTimePolicy`.
+* **BaseType (USM).** `U.ContextSliceSet` (set‑valued scope objects range over sets of addressable `U.ContextSlice`).
+* **SliceSet (USM).** `U.ContextSliceSet` (addressable `U.ContextSlice`s; see §6.1).
+* **SubjectKind (USM).** `U.Scope` with kind specialisations:  
+  `U.ClaimScope ⊑ U.Scope`, `U.WorkScope ⊑ U.Scope`, `U.PublicationScope ⊑ U.Scope`.
+* **ExtentRule (USM).** The quantifier domain is the set of **well‑formed scope objects** over the SliceSet: `Extension(U.Scope, slice) = { S | S ⊆ U.ContextSliceSet }`.
+* **ResultKind? (USM).** `U.Scope` (for operators that return scopes, e.g., `∩`, `SpanUnion`, `translate`).
+
+**SlotIndex (USM) for operators/guards (normative; A.6.0:4.1.1 + A.6.5).**  
+These SlotKinds are stable names for signatures, substitution laws, and guard templates; they are **not** additional data slots on carriers.
+
+| SlotKind             | ValueKind              | refMode  | Meaning |
+|----------------------|------------------------|----------|---------|
+| `ScopeSlot`          | `U.Scope`              | byRef    | A scope object (set of slices) owned by a carrier |
+| `LeftScopeSlot`      | `U.Scope`              | byRef    | Left scope operand (binary ops/relations) |
+| `RightScopeSlot`     | `U.Scope`              | byRef    | Right scope operand (binary ops/relations) |
+| `ScopeFamilySlot`    | `Set[U.Scope]`          | byRef    | Finite family of scopes (for `SpanUnion`) |
+| `SliceSlot`          | `U.ContextSlice`       | byValue  | A single addressable slice (membership target) |
+| `SliceSetSlot`       | `U.ContextSliceSet`    | byRef    | A finite target set of slices (coverage target) |
+| `BridgeRef`          | `U.Bridge`             | byRef    | Bridge used for `translate` / Cross‑context guards |
+| `CLSlot`             | `U.CongruenceLevel`    | byValue  | Congruence Level bound in Cross‑context guards |
+| `GammaTimeSlot`      | `U.GammaTimePolicy`    | byValue  | Explicit `Γ_time` selector/policy bound in guards |
+
+**OperationAlgebra (USM) with SlotSpecs (normative).**
+
+* `member(SliceSlot, ScopeSlot)` — surface form: `SliceSlot ∈ ScopeSlot`.
+* `subset(LeftScopeSlot, RightScopeSlot)` — surface form: `LeftScopeSlot ⊆ RightScopeSlot`.
+* `intersect(LeftScopeSlot, RightScopeSlot) → U.Scope` — surface form: `LeftScopeSlot ∩ RightScopeSlot`.
+* `spanUnion(ScopeFamilySlot) → U.Scope` — surface form: `SpanUnion(ScopeFamilySlot)`.
+* `translate(BridgeRef, ScopeSlot) → U.Scope` — Cross‑context mapping via Bridge.
+* `widen(LeftScopeSlot, RightScopeSlot)` — Δ‑move, requires `LeftScopeSlot ⊂ RightScopeSlot`.
+* `narrow(LeftScopeSlot, RightScopeSlot)` — Δ‑move, requires `RightScopeSlot ⊂ LeftScopeSlot`.
+* `refit(LeftScopeSlot, RightScopeSlot)` — normalization, requires `LeftScopeSlot = RightScopeSlot`.
+
+**Derived guard predicates (USM).**
+
+* `coversSlice(ScopeSlot, SliceSlot) := (SliceSlot ∈ ScopeSlot)`.
+* `coversSet(ScopeSlot, SliceSetSlot) := (SliceSetSlot ⊆ ScopeSlot)`.
+
+**LawSet (USM).** Serial composition uses **intersection**; parallel publication uses **SpanUnion** only with an explicit independence justification (§7.3).
+
+**AdmissibilityConditions (USM).** Scope coverage predicates MUST be **tri‑state** under unknowns: unknown inputs yield **unknown**, and guards MUST either (a) **abstain** (fail closed) or (b) **degrade** trust in the admitting decision via **R**; unknown MUST NOT be implicitly coerced to `false`/`0`. (See also §7.1 and §10.1.)
+
+**Applicability (USM).** USM governs **Claim/Work/Publication** scope objects inside a `U.BoundedContext`; coverage judgments are evaluated on explicit `U.ContextSlice` tuples (§6.1) and are not comparable/scorable as CHR values.
+
+**Audit (USM).** Record scope‑aware decisions with the `TargetSlice` tuple, guard outcomes, and any Bridge+CL used (see §14.1).
+
+**Transport (USM).** Cross‑context usage is **Bridge‑only** with explicit **CL**; CL penalties apply to `R_eff = R · Φ(CL)` and MUST NOT rewrite **F** or **G** (§7.4/§7.5).
+
+**Γ_timePolicy (USM).** `Γ_time` is mandatory in slices and guards (§8.2); implicit “latest” is forbidden.
+
+**PlaneRegime (USM).** Not applicable to set‑valued scope objects (no `CL^plane` effect on scopes).
+
+**Mechanism specialisation (USM; A.6.1:4.2.1).** A bounded context MAY publish a specialisation of USM as either a refinement `USM′ ⊑ USM` (tighten LawSet/AdmissibilityConditions) or an extension `USM ⊑⁺ USM′` (add new operators/slots). Any such specialisation SHALL (i) name its parent (`USM`), (ii) declare the morphism kind (`⊑` vs `⊑⁺`), (iii) preserve the same BaseType and SlotKinds for inherited operators (no renaming), (iv) avoid adding new mandatory inputs to inherited signatures. It MAY narrow ValueKinds/refModes monotonically and add admissibility constraints, but MUST remain substitutable for the inherited USM operators.
 
 #### A.2.6:6.1 - `U.ContextSlice` — where scope is evaluated
 
@@ -3643,6 +3708,11 @@ These facets are **separate** from `U.WorkScope` and live in the **R‑lane** (a
   * **singleton:** `TargetSlice ∈ Scope`, or
   * **set:** `TargetSet ⊆ Scope`.
 * **No implicit expansion.** Absent an explicit declaration, guards MUST NOT treat “close” slices as covered; widening requires a ΔG+ change.
+
+**Tri‑state admissibility under unknowns (normative; aligns A.6.1).**
+
+* If any required input to a membership/coverage check is **unknown** (missing slice selector, unknown Standard version, unmappable Bridge leg, unspecified `Γ_time`, etc.), the check result is **unknown**, not `false`.
+* Guards MUST either **abstain** (fail closed) or explicitly route the outcome through an **R‑lane degradation** policy; unknown MUST NOT be coerced to `false/0`.
 
 #### A.2.6:7.2 - Serial Composition (Intersection)
 
@@ -3773,6 +3843,8 @@ A scope‑aware guard has the form:
 ```
 Guard := ScopeCoverage AND TimePolicy AND (EvidenceFreshness?) AND (BridgePolicy?)
 ```
+
+**Admissibility note (normative; A.6.1 alignment).** If `ScopeCoverage` is **unknown** (due to unknown slice keys, unmappable translation, missing `Γ_time`, etc.), the guard MUST NOT silently treat this as `false`. It MUST either abstain (fail closed) or apply an explicit R‑lane degradation policy.
 
 Where:
 
@@ -3909,6 +3981,8 @@ Implicit “latest” is not allowed. If multiple contributors declare different
 | **CC‑USM‑11 (Separation).**           | Scope coverage checks and evidence freshness/assurance checks **MUST** be separate predicates (G vs R).                                                                                        |
 | **CC‑USM‑12 (Versioned Standards).**  | Scope predicates **SHALL** name Standards/interfaces by **version**; changes in notations with faithful mapping do not change **G** (may change CL for R).                                     |
 | **CC‑USM‑13 (Min‑info publication).** | Published scopes **SHOULD** enumerate slices or predicate blocks sufficient to re‑evaluate membership without external folklore.                                                               |
+| **CC‑USM‑14 (Slot discipline).**      | Where USM operations/guards are referenced in signatures or templates, they **SHALL** use explicit SlotSpecs and obey the A.6.5 lexical discipline (`…Slot` for SlotKinds; `…Ref` only for RefKinds/refs). |
+| **CC‑USM‑15 (Unknown handling).**     | Membership/coverage evaluation MUST be tri‑state under unknown inputs: unknown → {abstain (fail closed) \| degrade via R}; unknown MUST NOT be coerced to `false/0`. |
 
 ### A.2.6:12 - Worked Examples
 
@@ -5622,9 +5696,7 @@ The “hour‑glass” brings two further advantages:
 
 FPF already uses “signatures” to stabilise public promises of **architheories** and, via **A.6.1**, of **mechanisms**. But authors also need stable, minimal declarations for **theories** (LOG), **methods** (operational families), and even **disciplines** (regulated vocabularies). Without **one** universal notion of signature:
 * similar constructs proliferate under incompatible names;
-    
 * readers cannot tell what is **declared** (intension & laws) versus what is **implemented** (specification);
-    
 * cross‑context reuse lacks a canonical place to state **applicability** and **lawful vocabularies**.
 
 E.8 demands a single authoring voice and section order; E.10 demands lexical discipline across strata. A.6.0 provides the common kernel shape these patterns presuppose.
@@ -5986,11 +6058,23 @@ Why “Signature”? Familiar to engineers (function/type signatures) and to log
 
 ## A.6.1 - U.Mechanism - Law‑governed application to a SubjectKind over a BaseType
 
-**One‑line summary.** A `U.Mechanism` is a **Signature with laws** applied to a declared **SubjectKind** over a **BaseType**, with explicit **operations**, **invariants/guards**, and a named **Transport** clause for cross‑context use. Transport is **Bridge‑only** (per **F.9**) with penalties routed to **R**/**R_eff** only (per **B.3**); **F/G** remain invariant; **CL^plane** follows **C.2.1 CHR:ReferencePlane**. Realizations **MAY** be published under **A.6** (Signature→Realization; **one Γ only if `classification=CAL`**; acyclic imports; opacity).
+**One‑line summary.** A `U.Mechanism` is a specialisation of `U.Signature` (A.6.0): its **Vocabulary** is an explicit **OperationAlgebra** whose operators publish **SlotSpecs** (A.6.5), its **Laws** are a **LawSet**, and it adds **AdmissibilityConditions** (operational guards) plus a named **Transport** clause for cross‑context use. Transport is **Bridge‑only** (per **F.9**) with penalties routed to the **Reliability** channel only (**R**, or **R_eff** when distinguished) (per **B.3**); **F/G** remain invariant; **CL^plane** follows **C.2.1 CHR:ReferencePlane**. Realizations **MAY** be published under **A.6** (Signature→Realization; **one Γ only if `classification=CAL`**; acyclic imports; opacity).
 
 **Status.** Normative \[A\] in **Part A (Kernel)**.  
 
 **Placement.** Immediately **after A.6** as **A.6.1**. **USM (A.2.6)** and **UNM (A.19/C.16)** become **instances conforming to A.6.1** (no semantic change to either).
+
+**Mint vs reuse.** This pattern mints the Kernel lexemes `U.Mechanism`, `U.MechMorph`, and `U.MechAuthoring`, plus the descriptive record names `MechanismDescription`, `MechFamilyDescription`, and `MechInstanceDescription`. It reuses `U.Signature` (A.6.0), `U.Type`, `U.BoundedContext`, and Part F Bridge/CL/ReferencePlane terms without changing them; it does **not** mint new `U.Type` core types.
+
+**Type.** Architectural pattern (kernel‑level; notation‑independent).
+
+**LEX.TokenClass (E.10).** Declared here for the tokens minted by this pattern (see **E.10:7.1**).
+* `LEX.TokenClass(U.Mechanism) = KernelToken`
+* `LEX.TokenClass(U.MechMorph) = KernelToken`
+* `LEX.TokenClass(U.MechAuthoring) = KernelToken`
+* `LEX.TokenClass(MechanismDescription) = KernelToken`
+* `LEX.TokenClass(MechFamilyDescription) = KernelToken`
+* `LEX.TokenClass(MechInstanceDescription) = KernelToken`
 
 ### A.6.1:1 - Problem frame
 
@@ -6008,6 +6092,8 @@ Without a kernel abstraction, scope/normalization/comparison constructs prolifer
 
 **Time determinacy.** Explicit **Γ_time**; no implicit *latest*. (Required in USM’s `ContextSlice`.)
 
+**Slot clarity vs specialisation depth.** Multi‑level specialisations require explicit **SlotSpecs** (A.6.5) and monotone refinement of **ValueKinds**; SlotKinds are stable across levels (no implicit positional parameters).
+
 **Signature hygiene.** Obey **A.6** (exactly one Γ from CAL, LOG/CHR export none; imports acyclic; realizations opaque).
 
 ### A.6.1:4 - Solution
@@ -6017,40 +6103,51 @@ Without a kernel abstraction, scope/normalization/comparison constructs prolifer
 A `U.Mechanism` **publishes**  
         `U.Mechanism.Intension := ⟨IntensionHeader, Imports,
                 SubjectBlock := ⟨SubjectKind, BaseType, SliceSet, ExtentRule, ResultKind?⟩,
-                ParamKinds, OperationAlgebra, LawSet, AdmissibilityConditions, Applicability, Transport, Γ_timePolicy, PlaneRegime, Audit⟩`  
+                SlotIndex, OperationAlgebra, LawSet, AdmissibilityConditions,
+                Applicability, Transport, Γ_timePolicy, PlaneRegime, Audit⟩`  
 and admits Realizations (kernel‑level or architheory‑level) that respect it. The shape is **notation‑independent** and **conceptual** (no tooling, storage, or CI metadata).
+
+* **A.6.0 alignment (normative).** `U.Mechanism` is a specialisation of `U.Signature` (A.6.0). A mechanism publication **SHALL** include the universal four‑row Signature Block (*SubjectBlock / Vocabulary / Laws / Applicability*). The canonical mapping is:  
+  – **SubjectBlock** ↔ `SubjectBlock`  
+  – **Vocabulary** ↔ `OperationAlgebra` (including inline SlotSpecs per A.6.0:4.1.1 / A.6.5)  
+  – **Laws** ↔ `LawSet`  
+  – **Applicability** ↔ `Applicability`  
+  `SlotIndex` is a mechanism-only **index/projection** over SlotSpecs used by `OperationAlgebra` (and any extra SlotSpecs used only by `AdmissibilityConditions`); it does **not** introduce a fifth Signature row and does not relax A.6.0:4.1.1.
+  Mechanism‑only additions are `AdmissibilityConditions`, `Transport`, `Γ_timePolicy`, `PlaneRegime`, and `Audit`; they extend the Signature without contradicting its intension/specification split (A.6.0; CC‑A.6.0‑5).
 
 * **IntensionHeader.** `id` (PascalCase), `version` (SemVer), `status` (draft/review/stable/deprecated).  
   If realized as an **Architheory**, add the **A.6** header with `classification ∈ {CAL|LOG|CHR}` and `imports/provides`; **only CAL may export exactly one Γ**; **LOG/CHR export none**. For **Kernel‑level** realizations, do **not** mint an A.6 header.
 
 * **Imports.** Architheory Signatures / `U.Types` this mechanism requires (notation‑independent; **acyclic**). When realized as an Architheory, **LOG/CHR may import CAL; CAL may import CAL** (A.6 layering).
-* **BaseType.** A `U.Type` the mechanism ranges over. CHR spaces (e.g., a `U.CharacteristicSpace`/chart family) appear here **as types**; outside CHR, use set‑typed `U.Type`s. **Do not mint** a new core type; **reference existing `U.Type`s**. If planes differ, state the **ReferencePlane** policy (see *PlaneRegime*).
-* **SubjectKind / SliceSet / ExtentRule / ResultKind? / ParamKinds.**
+* **BaseType.** A `U.Type` the mechanism ranges over. CHR spaces (e.g., a `U.CharacteristicSpace`/chart family) appear here **as types**; outside CHR, use set‑typed `U.Type`s. A conformant `U.Mechanism` publication **MUST NOT** mint a new core type here; it **MUST** reference existing `U.Type`s. If planes differ, state the **ReferencePlane** policy (see *PlaneRegime*).
+* **SubjectKind / SliceSet / ExtentRule / ResultKind? / SlotIndex.**
   • **SubjectKind.** The intensional kind acted upon (C.3.1/3.2), separate from quantification.
   • **SliceSet.** The addressable set of Context slices (USM: **ContextSliceSet**).
   • **ExtentRule.** A rule yielding `Extension(SubjectKind, slice)` (C.3.2), used as the quantifier’s domain.
   • **ResultKind?** Optional intensional kind for outputs of `OperationAlgebra`.
-  • **ParamKinds.** A name→Kind map for multi‑ary operators (inputs); avoids overloading “Role”.
-* **OperationAlgebra.** Named operations with types; examples:  
+  • **SlotIndex.** A set (or map) of SlotSpecs `SlotSpec = ⟨SlotKind, ValueKind, refMode⟩` (A.6.0:4.1.1; A.6.5) covering every argument position used by **OperationAlgebra** and **AdmissibilityConditions**. SlotKinds are stable names for substitution and specialisation; parameter names/indices are presentation only.  
+    For **Vocabulary-level** operators, SlotSpecs remain declared **in each operator’s parameter block** (A.6.0:4.1.1). `SlotIndex` is an extracted index that **MUST** be mechanically derivable from those declarations (plus any guard-only SlotSpecs).
+    **Shorthand views (didactic only).** Authors MAY include a simple name→ValueKind list (a `ValueKindView`) as a didactic projection of SlotSpecs, but it SHALL NOT replace SlotSpecs (`SlotKind/ValueKind/refMode`) in normative Mechanism definitions. If present, it MUST be mechanically derivable from `SlotIndex` (e.g., `ValueKindView = π_value(SlotIndex)` by dropping `refMode`). The colloquial label **ParamKind** is permitted only in prose as a synonym for the `ValueKind` component of a SlotSpec; it MUST NOT be introduced as a field name, token, or type.
+* **OperationAlgebra.** Named operations whose signatures are expressed over SlotKinds from `SlotIndex` (A.6.5); **no implicit parameters**. For every n‑ary operator, its Vocabulary declaration **SHALL** publish SlotSpec triples per argument position (A.6.0:4.1.1); positional indices are presentation only. Examples:  
   • **USM:** `∈, ⊆, ∩, SpanUnion, translate, widen, narrow, refit`.  
   • **UNM:** `apply(method)`, `compose`, `quotient(≡_UNM)`; **normalize‑then‑compare**.
 
 * **LawSet.** Equations/invariants (no proofs here). **Admissions/eligibility tests belong under AdmissibilityConditions, not here.** Laws **MUST** be compatible with CHR legality where numeric comparison/aggregation is induced. Examples:
   • **USM:** serial **intersection**; **SpanUnion** only where a **named independence assumption** is satisfied (state features/axes, validity window, evidence class); `translate` uses declared Bridges; **Γ_time** is mandatory.  
   • **UNM:** **scale‑appropriate** transforms — ratio→positive‑scalar; interval→affine; ordinal→monotone; nominal→categorical; `tabular:LUT(+uncertainty)`.  
-  *(Do not mint a new Kernel token for “certificate”; if such a type is later required, it **MUST** follow DRR/LEX minting.)*
+  *(A conformant `U.Mechanism` publication **MUST NOT** mint a new Kernel token for “certificate”; if such a type is later required, it **MUST** follow DRR/LEX minting.)*
 
-* **AdmissibilityConditions.** Deterministic, **context‑local** predicates that **fail closed** (e.g., “Scope covers TargetSlice” with named **Γ_time**; “NormalizationMethod class + validity window named”). Unknowns **→ {degrade | abstain}**; never coerce to 0/false.
+* **AdmissibilityConditions.** Deterministic, **context‑local** *operational* guard predicates that **fail closed** (e.g., “Scope covers TargetSlice” with named **Γ_time**; “NormalizationMethod class + validity window named”). Predicate arguments **SHALL** be declared via SlotSpecs from `SlotIndex` (A.6.5), not as implicit positional parameters. Unknowns **→ {degrade | abstain}**; never coerce to 0/false.
 
 * **Applicability.** Binding to a **`U.BoundedContext`** with stance/plane/time notes and any **CG‑Spec/MM‑CHR** legality claims; cross‑context use is declared via **Transport** only.
 
-* **Transport.** **Bridge‑only** semantics for cross‑context / cross‑plane use: name the Bridge and channel (`Scope|Kind`) per **F.9**, and record **ReferencePlane**(src,tgt) per **C.2.1**. Do **not** restate CL ladders, **CL^plane**, or Φ/Ψ tables here; penalties **route to R/R_eff only** and **never** mutate F/G (per **B.3**). Crossings are explicit; **no implicit crossings**. Where **USM** or **KindBridge** are used together, apply the **two‑bridge rule** (scope CL and kind `CL^k` penalties handled **separately** to R).
+* **Transport.** **Bridge‑only** semantics for cross‑context / cross‑plane use: name the Bridge and channel (`Scope|Kind`) per **F.9**, and record **ReferencePlane**(src,tgt) per **C.2.1**. **Terminology:** this `Transport` clause is a declarative policy surface; it does **not** introduce a `U.Transfer` edge (see **E.18** term separation). The Transport clause **MUST NOT** restate CL ladders, `CL^plane`, or Φ/Ψ tables; it **MUST** reference the applicable policy ids / registries instead; penalties **route to R/R_eff only** and **never** mutate F/G (per **B.3**). Crossings are explicit; **no implicit crossings**. Where **USM** or **KindBridge** are used together, apply the **two‑bridge rule** (scope CL and kind `CL^k` penalties handled **separately** to the Reliability channel (**R**/**R_eff**)).
 
 * **Γ_timePolicy.** Point/window/policy; **no implicit “latest.”** Validity windows are **named**; **required** whenever guards reference time.
 * **PlaneRegime.** Declare `ReferencePlane` on values/paths; when planes differ, name **CL^plane** and apply a **Φ_plane** policy (Part F/B.3). Plane penalties **do not** change CL; route to **R/R_eff** only; **F/G** stay invariant.
 
 * **Audit.** Conceptual audit surface only (no data/telemetry workflows): crossings are publishable on **UTS**; surface **policy‑ids** rather than tables. Edition pins and regression hooks (if any) are referenced by id; operational details remain out of scope.
-* **SignatureBlock alignment (A.6).** When realized as an **Architheory**, map `U.Mechanism.Intension` to the **A.6 Signature Block** — `Imports`, **Derivations**, **Invariants**, **BelongsToAssurance** — and include the **A.6 header** with `classification/provides`. **CAL** Realizations MAY **provide exactly one Γ**; **LOG/CHR provide none**; **imports form a DAG**; internals **opaque**.
+* **SignatureBlock alignment (A.6).** When realized as an **Architheory**, map `U.Mechanism.Intension` to the **A.6 Signature Block** — `Imports`, **Derivations**, **Invariants**, **BelongsToAssurance** — and include the **A.6 header** with `classification/provides`. **CAL** Realizations MAY **provide exactly one Γ**; **LOG/CHR provide none**; **imports form a DAG**; internals **opaque**. SlotKinds and SlotSpecs in `SlotIndex` remain part of the **Vocabulary** row (A.6.0) and **MUST** obey A.6.5 in all Architheory renderings.
 
 **Compatibility with A.6.** If realized as an **architheory** (CAL/LOG/CHR), obey A.6 (**one Γ for CAL only; acyclic imports; opacity**). Kernel‑level realizations remain notation‑independent and publish the same fields for auditability. LEX discipline applies to all minted tokens.
 
@@ -6059,14 +6156,30 @@ and admits Realizations (kernel‑level or architheory‑level) that respect it.
 **Intent.** Provide structure‑preserving **relations & constructors** between mechanisms.  
 **Definitions.**
 
-* **Refinement** `M′ ⊑ M`: narrows **SliceSet/ExtentRule** or **strengthens laws** (safe substitution; Liskov‑style).
-* **Extension** `M ⊑⁺ M″`: **adds operations** without weakening existing Laws; old programs remain valid (conservative extension).
+* **Refinement** `M′ ⊑ M`: narrows the **SubjectBlock** and/or **SlotSpecs** (ValueKinds/refMode for inherited SlotKinds) and/or **strengthens** `LawSet`/`AdmissibilityConditions` (safe substitution; Liskov‑style). A Refinement **MUST NOT** rename SlotKinds or add new required arguments to inherited operations.
+* **Extension** `M ⊑⁺ M″`: **adds operations** (and any new SlotKinds used only by those new operations) without weakening existing Laws/Guards; old programs remain valid (conservative extension).
 * **Equivalence** `M ≡ M′`: there exists a bijective mapping between Subjects/ops preserving/reflecting **LawSet** (up‑to‑isomorphism on **BaseType** and **OperationAlgebra**).
     
 * **Quotient** `M/≈`: factor by a **congruence** (e.g., **≡_UNM** for charts).
 
 * **Product** `M×N`: independent **BaseTypes**; ops are component‑wise; ensures **no illegal cross‑ops** (e.g., set‑algebra discipline for `SpanUnion`). Where independence is claimed, **name and justify** the assumption (do not mint new Kernel types here).
 
+
+##### A.6.1:4.2.1 - Multi-level specialisation ladders (normative)
+
+Many families need a **generic** mechanism at the top (e.g., “select anything”) and progressively **specialised** mechanisms below (e.g., “select a method by decision theory”, “select a telemetry pack”). To keep such ladders **modular** and to prevent cross‑level leakage:
+
+1. **Explicit parent + morphism kind.** Any mechanism that specialises another **MUST** name its parent and declare whether the step is a **Refinement** (`⊑`) or an **Extension** (`⊑⁺`). A specialisation family **MUST** be acyclic (a DAG), mirroring A.6 import discipline.
+
+2. **SlotKind invariance across levels.** For every inherited operation/guard predicate, SlotKinds are invariant (A.6.5). A specialisation step **MUST NOT** rename an inherited SlotKind, change its documented semantics, or rely on positional re‑ordering instead of SlotKind identity.
+
+3. **ValueKind monotonicity.** A Refinement MAY narrow `ValueKind` (i.e., `ValueKind′ ⊑ ValueKind` in Kind‑CAL) and/or `refMode` for an inherited SlotKind, and MAY strengthen Laws/Guards. It **MUST NOT** widen ValueKinds or relax Guards; otherwise mint a new parent mechanism or publish an adapter mechanism.
+
+4. **No new mandatory inputs to inherited operations.** If a specialisation needs extra inputs, it **MUST** introduce a new operation (Extension) or an adapter mechanism; it **MUST NOT** retrofit new required parameters into an inherited operation signature.
+
+5. **No upward leakage.** A top‑level mechanism in a ladder **SHOULD** mention only the most general ValueKinds required by its SlotSpecs and Laws. Domain‑specific artefacts (e.g., decision‑theory policies, OEE generators, evaluation packs) belong in specialised mechanisms that refine slots and/or add operations.
+
+*Informative selector ladder sketch.* `SelectorMechanism` can declare a stable slot interface (`CandidateSetSlot`, `CriteriaSlot`, `ContextSlot`, `SelectionSlot`) with generic ValueKinds. `SelectorMethodMechanism ⊑ SelectorMechanism` then narrows `CandidateSetSlot.ValueKind` to `U.Method` and (by Extension) adds decision‑theory specific slots/ops; an OEE generator is authored as a separate mechanism that produces candidate/criteria packs consumed by the selector.
 **Transport** `Bridge⋅M`: lifts across Contexts/planes; names **CL/CL^k/CL^plane** regimes; penalties → **`R_eff` only**; **UTS row** recommended for publication; **ReferencePlane(src,tgt)** recorded. If mapping losses are material, **narrow** the mapped set or publish an **adapter** (best practice).
 
 **Passing example.** `USM′ = USM + “publish named independence‑assumption evidence for SpanUnion”` ⇒ **Refinement** (strengthened law; substitution‑safe).
@@ -6076,7 +6189,7 @@ and admits Realizations (kernel‑level or architheory‑level) that respect it.
 
 **MechanismDescription (E.8 Tell–Show–Show; I/D/S‑compliant):**
 `Mechanism: U.<Name>`  *(Kernel conceptual description; no tooling fields)*
-`Imports: <Signatures / U.Types>` - `SubjectBlock: <SubjectKind, BaseType, SliceSet, ExtentRule, ResultKind?>` - `ParamKinds: <name→Kind map>` - `OperationAlgebra: <operators with types>` - `LawSet: <equations/invariants>` - `AdmissibilityConditions: <admission predicates; Γ_time>` - `Transport: <Bridge channels; CL/CL^k/CL^plane named; ReferencePlane(src,tgt)>` - `PlaneRegime: <world|concept|episteme rules>`
+`Imports: <Signatures / U.Types>` - `SubjectBlock: <SubjectKind, BaseType, SliceSet, ExtentRule, ResultKind?>` - `SlotSpecs: <SlotIndex (A.6.5)>` - `OperationAlgebra: <operators with SlotKinds>` - `LawSet: <equations/invariants>` - `AdmissibilityConditions: <admission predicates with SlotKinds; Γ_time>` - `Transport: <Bridge channels; CL/CL^k/CL^plane named; ReferencePlane(src,tgt)>` - `PlaneRegime: <world|concept|episteme rules>`
 
 #### A.6.1:4.4 - MechFamilyDescription & MechInstanceDescription
 
@@ -6084,14 +6197,51 @@ and admits Realizations (kernel‑level or architheory‑level) that respect it.
 
 * **MechInstanceDescription**: `{Mechanism.Intension@Context, Windows, named Φ/Ψ/Φ_plane regimes, BridgeIds}` — a **conceptual instance**; operational telemetry/workflows are out of scope.
 
+#### A.6.1:4.5 - Defaults
+
+* **Local‑first semantics.** All judgments are **context‑local**; crossings are **explicit** and **costed** (CL→R only).
+* **Compliance‑first comparability.** Numeric comparison/aggregation requires **CG‑Spec** (lawful **SCP**, Γ‑fold, MinimalEvidence); **partial orders return sets**; **no ordinal means**.
+* **Tri‑state discipline.** `unknown → {degrade|abstain}`; `sandbox/probe‑only` is a **LOG branch** with a policy‑id (no implicit `unknown→0/false`).
+* **R‑only penalties.** **Φ/Ψ/Φ_plane** are **monotone and bounded**; penalties route to **`R_eff` only**; **F/G invariant**.
+
+#### A.6.1:4.6 - Born‑via‑A.6.1 sketches (informative)
+
+**CPM — Unified Comparison Mechanism (parity‑grade orders)**  
+**BaseType:** typed traits/charts in a CG‑Frame. **OperationAlgebra:** lawful orders (≤, ≽, lexicographic) + **set‑returning** dominance (Pareto). **LawSet:** **no ordinal averaging**; **normalize‑then‑compare** when spaces/scales differ (UNM); editions pinned. **AdmissibilityConditions:** **CG‑Spec** bound; **ComparatorSet** explicit. **Transport:** Bridge+CL → **R/R_eff only**.  
+  
+**USCM — Unified Scoring Mechanism (SCP‑first)**  
+**BaseType:** `U.Measure` (CHR‑typed slots). **OperationAlgebra:** ScoringMethod(s) (Coordinate→Score) + admissible aggregators; **WeightedSum** only on interval/ratio with unit alignment; partial orders return sets. **Guards:** **MinimalEvidence** \+ CG‑Spec legality. **Transport:** penalties → **R/R_eff**; UTS row.
+  
+**PTM — Publication & Telemetry Mechanism (informative)**
+**BaseType:** `SoTA‑Pack(Core)`, `PathId/PathSliceId`, `PolicyId`. **OperationAlgebra:** emit **selector‑ready** packs with parity pins and **telemetry stubs**; listen for edition/illumination bumps; trigger **slice‑scoped** refresh. 
+**LawSet:** **no change of dominance defaults** unless CAL policy promotes; edition-aware refresh.  
+**Guards:** **GateCrossing visibility harness** blocks publication on missing crossing attestations (BridgeCard+UTS row, ReferencePlane, CL/CL^k/CL^plane, Φ/Ψ policy-ids), on lane-purity violations (CL→R only; F/G invariant), or on lexical SD violations (E.10). 
+**Transport/Audit:** **G.10/G.11** publication & refresh semantics (CL routing to **R/R_eff**).
+
+*Informative SoTA:* telemetry hooks align with post‑2015 quality‑diversity families (CMA‑ME/MAE, DQD/MEGA) and open‑ended methods (POET‑class) when monitored via illumination telemetry rather than scored.
+
+#### A.6.1:4.7 - 60‑second didactic script
+
+> *“To mint a mechanism, fill a **Mechanism.Intension**: declare **SubjectBlock** (**SubjectKind**, **BaseType**, **SliceSet**, **ExtentRule**, **ResultKind?**) and **SlotSpecs**; then **OperationAlgebra/Laws/AdmissibilityConditions** and **Γ_time**; define **Transport** (Bridge/CL with penalties to R only), and **Audit** (UTS + Path pins). Realize it as CAL/LOG/CHR under **A.6**. USM and UNM are already such mechanisms; the same template births comparison, scoring, and publication mechanisms—safely bound to **CG‑Spec**—without leaving the kernel grammar.”*
+
+#### A.6.1:4.8 - Quick “builder’s” checklist (author‑facing)
+
+1. Draft a **run↔design charter**: why this Mechanism, which **guard surfaces** and **comparability** are in scope; which `DesignRunTag`/`CtxState.locus` boundary it mediates; is a **Γ_m (CAL)** builder needed?
+    
+* Fill **Mechanism.Intension** (**SubjectBlock**, **SlotSpecs**, **OperationAlgebra**, **LawSet**, **AdmissibilityConditions**, **Applicability**, **Transport**, **Γ_timePolicy**, **PlaneRegime**, **Audit**).
+    
+* Bind **CHR legality & CG‑Spec** when comparing/aggregating (ComparatorSet, ScaleComplianceProfile (SCP), MinimalEvidence, Γ‑fold).
+    
+Ship **UTS + G.10**; wire **G.11** telemetry (PathSlice‑keyed); ensure penalties **route to `R_eff` only**.
+
 ### A.6.1:5 - Archetypal Grounding
 
-#### A.6.1:5.1 - **U.System (Work) — USM as a U.Mechanism instance** (normative by reference)
+#### A.6.1:5.1 - **U.Scope (Claim/Work/Publication) — USM as a U.Mechanism instance** (normative by reference)
 
 * **Imports:** `U.ContextSliceSet`; Part F.9 **Bridge**; **C.2.1 ReferencePlane** (noted for crossings); **C.2.2 F–G–R**; **C.2.3 U.Formality**.
 * **BaseType:** `U.ContextSliceSet`.
 * **SliceSet:** `U.ContextSliceSet` (addressable `U.ContextSlice`s).
-* **SubjectKind:** `U.Scope` with specializations `U.ClaimScope` (G) and `U.WorkScope`.
+* **SubjectKind:** `U.Scope` with specializations `U.ClaimScope` (G), `U.WorkScope`, and `U.PublicationScope`.
 * **OperationAlgebra:** `∈, ⊆, ∩, SpanUnion, translate, widen, narrow, refit`.
 * **LawSet:** serial **intersection**; **SpanUnion** only where a **named independence assumption** is satisfied (state features/axes, validity window, evidence class); **translate** uses declared **Bridges**; **Γ_time** is **mandatory**.
 * **AdmissibilityConditions:** deterministic **“Scope covers TargetSlice”**; **fail‑closed**; `unknown → {degrade|abstain}` (no implicit `unknown→0/false`).
@@ -6113,108 +6263,101 @@ and admits Realizations (kernel‑level or architheory‑level) that respect it.
 
 *(No operational telemetry implied; publication remains conceptual.)*
 
-### A.6.1:6 - Defaults
+### A.6.1:6 - Bias-Annotation *(informative)*
 
-* **Local‑first semantics.** All judgments are **context‑local**; crossings are **explicit** and **costed** (CL→R only).
-* **Compliance‑first comparability.** Numeric comparison/aggregation requires **CG‑Spec** (lawful **SCP**, Γ‑fold, MinimalEvidence); **partial orders return sets**; **no ordinal means**.
-* **Tri‑state discipline.** `unknown → {degrade|abstain}`; `sandbox/probe‑only` is a **LOG branch** with a policy‑id (no implicit `unknown→0/false`).
-* **R‑only penalties.** **Φ/Ψ/Φ_plane** are **monotone and bounded**; penalties route to **`R_eff` only**; **F/G invariant**.
+This pattern intentionally biases Mechanism authoring toward explicit contracts, context-local semantics, and auditable reuse.
+
+* **Gov (governance).** Bias toward publishable obligations (Signature rows, CC items) and explicit policy-ids for crossings. Risk: perceived authoring overhead. Mitigation: reuse the `U.MechAuthoring` template; keep Realizations opaque and put operational details outside the Kernel.
+* **Arch (architecture).** Bias toward locality-first semantics and **Bridge-only** transport with costs routed to **R/R_eff**. Risk: reduced convenience for ad-hoc cross-context reuse. Mitigation: publish adapter mechanisms and make crossings explicit via `Transport` (CC‑UM.3/CC‑UM.4).
+* **Onto/Epist (ontology/epistemology).** Bias toward lawful comparability (CHR legality; CG‑Spec binding) and against illegal scalarisation (e.g., ordinal means). Risk: some heuristic scoring practices become non-conformant. Mitigation: represent uncertainty explicitly and use `unknown → {degrade|abstain}` rather than coercions (CC‑UM.7).
+* **Prag (practice).** Bias toward notation-independence and against tool/vendor tokens in the Kernel. Risk: teams may want to inline CI/telemetry fields. Mitigation: keep audit surfaces conceptual (`Audit`) and reference operational hooks by id only (CC‑UM.6).
+* **Did (didactic).** Bias toward explicit SlotKinds/SlotSpecs over positional parameters. Risk: steep learning curve. Mitigation: allow non-normative projections (`ValueKindView`) and include a “60‑second” script plus a builder’s checklist (A.6.1:4.7/4.8).
 
 ### A.6.1:7 - Conformance Checklist (normative)
 
 | ID | Requirement |
 |----|-------------|
-| **CC‑UM.1** | **Complete Mechanism.Intension** publishes: `Imports; SubjectBlock (SubjectKind, BaseType, SliceSet, ExtentRule, ResultKind?); ParamKinds; OperationAlgebra; LawSet; AdmissibilityConditions; Applicability; Transport (Bridge named; ReferencePlane); Γ_timePolicy; PlaneRegime; Audit`. |
-| **CC‑UM.2** | **A.6 alignment:** if realized as Architheory, use A.6 header; **one Γ only if CAL**; LOG/CHR none; **imports acyclic**; Realizations **opaque**; laws may be **tightened** (not relaxed). |
-| **CC‑UM.3** | **Bridge‑only transport:** crossings **name** a **Bridge** (F.9); `ReferencePlane(src,tgt)` recorded (C.2.1); **CL^plane** named when planes differ; **no implicit crossings**. When typed reuse is involved, the **two‑bridge rule** applies (scope CL and kind `CL^k` penalties routed **separately** to **R**). |
-| **CC‑UM.4** | **R‑only routing:** Φ/Ψ/Φ_plane regimes and CL ladders per **B.3**; penalties **reduce R/R_eff** only; **F/G invariant**. |
-| **CC‑UM.5** | **CG‑Spec binding** for any numeric compare/aggregate: lawful **SCP** and Γ‑fold; **normalize‑then‑compare**; **partial orders return sets**; **no ordinal means**; interval/ratio arithmetic only with unit alignment (CSLC‑proven). |
-| **CC‑UM.6** | **E.8/E.10 compliance:** Tell–Show–Show present under **“Archetypal Grounding”**; twin registers & I‑D‑S respected; any new `U.*` token requires a **DRR** and **LEX.TokenClass** entry; non‑spec surfaces end with **“…Description”**; **no tool/vendor tokens in Core**. |
-| **CC‑UM.7** | **Unknowns tri‑state:** guards define `unknown → {degrade|abstain}`; sandbox/probe branches live in **SoS‑LOG** (not Acceptance).
+| **CC‑UM.0** | **A.6.0 alignment:** a conformant `U.Mechanism` publication **MUST** include the four‑row `U.Signature` Block (A.6.0). `OperationAlgebra` (including inline SlotSpecs per A.6.0:4.1.1/A.6.5) is the **Vocabulary** row, `LawSet` the **Laws** row, and `Applicability` the **Applicability** row; the universal block remains the comparability contract. Any `SlotIndex` is an index/projection and **MUST NOT** be treated as a fifth Signature row. |
+| **CC‑UM.1** | **Complete Mechanism.Intension:** a conformant `U.Mechanism` publication **MUST** publish: `IntensionHeader(id, version, status); Imports; SubjectBlock (SubjectKind, BaseType, SliceSet, ExtentRule, ResultKind?); SlotIndex (A.6.5); OperationAlgebra; LawSet; AdmissibilityConditions; Applicability; Transport (Bridge named; ReferencePlane); Γ_timePolicy; PlaneRegime; Audit`. `IntensionHeader.id` **MUST** be PascalCase; `version` **MUST** follow SemVer; `status ∈ {draft|review|stable|deprecated}`. Eligibility/admission tests **MUST** be expressed as `AdmissibilityConditions`, not as `LawSet`. |
+| **CC‑UM.2** | **A.6 alignment (Realizations):** if realized as an Architheory (CAL/LOG/CHR), the Realization artifact **MUST** use the A.6 header and obey A.6: it **MUST** `provide` exactly one Γ iff `classification=CAL`, it **MUST NOT** provide any Γ if `classification ∈ {LOG|CHR}`, and its imports **MUST** be acyclic. Realization internals **MUST** remain opaque. Realizations **MAY** tighten but **MUST NOT** relax `LawSet` or `AdmissibilityConditions`. Kernel‑level publications **MUST NOT** mint an A.6 header. |
+| **CC‑UM.3** | **Bridge‑only transport:** for any cross‑context/plane use, `Transport` **MUST** name the BridgeId and channel (F.9) and **MUST** record `ReferencePlane(src,tgt)` (C.2.1); when planes differ it **MUST** name `CL^plane`. Implicit crossings **MUST NOT** occur. When typed reuse is involved, the two‑bridge rule **MUST** apply (scope CL and kind `CL^k` penalties routed separately to **R**/**R_eff**). `Transport` is a declarative policy surface and **MUST NOT** be used to introduce a `U.Transfer` edge (E.18 term separation). It **MUST NOT** restate CL ladders or Φ/Ψ/Φ_plane tables; it **MUST** reference policy ids / registries. |
+| **CC‑UM.4** | **R‑only routing:** any CL / `CL^k` / `CL^plane` penalties declared or incurred by `Transport` **MUST** reduce the Reliability channel only (**R**, or **R_eff** when distinguished) per **B.3**; they **MUST NOT** mutate **F/G**. |
+| **CC‑UM.5** | **CG‑Spec binding:** if the Mechanism defines or induces any numeric comparison or aggregation, it **MUST** bind to **CG‑Spec/MM‑CHR** (lawful **SCP**, Γ‑fold, MinimalEvidence; normalize‑then‑compare) and obey CHR legality: partial orders **MUST** return sets; ordinal means **MUST NOT** be computed; interval/ratio arithmetic **MUST** occur only with unit alignment (CSLC‑proven). |
+| **CC‑UM.6** | **E.8/E.10 compliance:** the A.6.1 publication **MUST** include Tell–Show–Show under **“Archetypal Grounding”** and **MUST** respect twin registers & I‑D‑S. Any new `U.*` token (including any new `U.Type`) **MUST** have a DRR and a `LEX.TokenClass` entry; `BaseType` **MUST** reference an existing `U.Type` (no in‑place minting), and any new `U.Type` required for that reference **MUST** be minted via DRR/LEX outside the mechanism definition. Non‑spec surfaces **MUST** end with **“…Description”**. Core narrative **MUST NOT** include tool/vendor tokens. |
+| **CC‑UM.7** | **Unknowns tri‑state:** guard predicates in `AdmissibilityConditions` **MUST** be deterministic, context‑local, and fail‑closed; they **MUST** define `unknown → {degrade|abstain}` and **MUST NOT** coerce unknowns to 0/false. Sandbox/probe branches **MUST** live in **SoS‑LOG** (not Acceptance). |
+| **CC‑UM.8** | **Multi‑level specialisation discipline:** if a Mechanism declares itself as `⊑` or `⊑⁺` of another Mechanism, it **MUST** satisfy A.6.1:4.2.1 (explicit parent+morphism kind; SlotKind invariance; monotone ValueKind narrowing; no new mandatory inputs to inherited ops). |
+| **CC‑UM.9** | **SlotIndex is a view:** `SlotIndex` **MUST** be mechanically derivable from (i) the per‑operator SlotSpecs in `OperationAlgebra` (A.6.0:4.1.1) plus (ii) any guard‑only SlotSpecs used by `AdmissibilityConditions`; it **MUST NOT** contradict those SlotSpecs. Any didactic `ValueKindView` (or “ParamKind” lists) are non‑normative projections only. |
 
-### A.6.1:8 - Born‑via‑A.6.1 sketches (informative)
+### A.6.1:8 - Common Anti-Patterns and How to Avoid Them *(informative)*
 
-**CPM — Unified Comparison Mechanism (parity‑grade orders)**  
-**BaseType:** typed traits/charts in a CG‑Frame. **OperationAlgebra:** lawful orders (≤, ≽, lexicographic) + **set‑returning** dominance (Pareto). **LawSet:** **no ordinal averaging**; **normalize‑then‑compare** when spaces/scales differ (UNM); editions pinned. **AdmissibilityConditions:** **CG‑Spec** bound; **ComparatorSet** explicit. **Transport:** Bridge+CL → **R/R_eff only**.  
-
-**USCM — Unified Scoring Mechanism (SCP‑first)**  
-**BaseType:** `U.Measure` (CHR‑typed slots). **OperationAlgebra:** ScoringMethod(s) (Coordinate→Score) + admissible aggregators; **WeightedSum** only on interval/ratio with unit alignment; partial orders return sets. **Guards:** **MinimalEvidence** \+ CG‑Spec legality. **Transport:** penalties → **R/R_eff**; UTS row.
-
-**PTM — Publication & Telemetry Mechanism (informative)**
-**BaseType:** `SoTA‑Pack(Core)`, `PathId/PathSliceId`, `PolicyId`. **OperationAlgebra:** emit **selector‑ready** packs with parity pins and **telemetry stubs**; listen for edition/illumination bumps; trigger **slice‑scoped** refresh. 
-**LawSet:** **no change of dominance defaults** unless CAL policy promotes; edition-aware refresh.  
-**Guards:** **GateCrossing visibility harness** blocks publication on missing crossing attestations (BridgeCard+UTS row, ReferencePlane, CL/CL^k/CL^plane, Φ/Ψ policy-ids), on lane-purity violations (CL→R only; F/G invariant), or on lexical SD violations (E.10). 
-**Transport/Audit:** **G.10/G.11** publication & refresh semantics (CL routing to **R/R_eff**).
-
-*Informative SoTA:* telemetry hooks align with post‑2015 quality‑diversity families (CMA‑ME/MAE, DQD/MEGA) and open‑ended methods (POET‑class) when monitored via illumination telemetry rather than scored.
-
-### A.6.1:**9 - SoTA-Echoing (post-2015 practice alignment)** *(informative)*
-
-**Purpose.** To show how the FPF concept of a *Mechanism* (law-governed signature with guards and transport) aligns with, and improves upon, leading research and engineering practices after 2015.  
-All comparisons are *informative*: they serve didactic continuity, not new normative force.
-
-#### A.6.1:9.1 - Contemporary references (post-2015 sources)
-
-1. **Algebraic effects and handlers** (Koka, Effekt, OCaml 5) — formalise “operation + lawful handler” semantics.
-    
-2. **Institution theory** (Goguen–Burstall; HETS evolutions) — defines translation between signatures, sentences, and models by typed morphisms.
-    
-3. **Policy-as-Code** (Rego/OPA, ISO 3450x ODD) — codifies admissibility and risk predicates for runtime enforcement.
-    
-4. **Session / Typestate types** (post-2017 multiparty protocols, linear usage) — constrain admissible operation sequences and states.
-    
-5. **Measurement-legality in machine learning** (2015 – 2025 monotone and calibrated learning, conformal prediction) — exemplifies the need for explicit scale compliance and monotonicity proofs (CSLC/CG-Spec echo).
-
-Each source corresponds to a distinct *Tradition*: formal semantics, categorical algebra, compliance automation, protocol safety, and lawful AI.
-
-#### A.6.1:9.2 - Alignment with A.6.1 fields and concepts
-
-| External practice | Corresponding A.6.1 field / construct | FPF alignment and improvement |
+| Anti-pattern | What it looks like | Remedy |
 | --- | --- | --- |
-| Algebraic effects & handlers | **OperationAlgebra + LawSet** | FPF generalises effect signatures into universal operator laws; adds Γ_time for temporal legality and explicit R-routing. |
-| Institution morphisms | **U.MechMorph** (Refine/Extend/Quotient) | Mechanism morphisms reuse institutional structure but add ContextSlice & Bridge discipline; CL penalties route → R_eff. |
-| Policy-as-Code / ODD | **AdmissibilityConditions + Γ_timePolicy** | Policies become first-class lawful guards; FPF forbids hidden context or “latest” defaults. |
-| Session / Typestate protocols | **AdmissibilityConditions + set-valued USM Scopes** | Deterministic guards preserve state safety; composable across Contexts by Bridges. |
-| Lawful measurement (ML) | **CG-Spec / MM-CHR** binding | Enforces CSLC proofs; forbids ordinal averaging; guarantees unit/scale alignment. |
+| **SlotIndex treated as a 5th Signature row** | Reviews start comparing mechanisms by `SlotIndex` only; SlotSpecs disappear from operator declarations. | Keep SlotSpecs **inline per operator**; treat `SlotIndex` as a derived projection only (CC‑UM.0, CC‑UM.9). |
+| **Admission tests put in LawSet** | “Eligibility” and “coverage” checks appear as laws; implementations silently diverge. | Move operational guards to `AdmissibilityConditions` (CC‑UM.1). |
+| **Implicit crossings / hidden CL ladders** | A mechanism is reused across Contexts/planes without a declared BridgeId/ReferencePlane; CL/Φ/Ψ tables get copied into local prose. | Crossings must be explicit and **Bridge-only**; `Transport` references policy ids/registries (CC‑UM.3). |
+| **Penalties leak into F/G** | A plane/kind/scope mismatch is handled by mutating Formality or Guarantee claims. | Route penalties to **R/R_eff only**; keep **F/G invariant** (CC‑UM.4). |
+| **Illegal scalarisation** | Ordinal means or cross-unit arithmetic is performed “because we need a number”. | Bind numeric comparison/aggregation to CG‑Spec/MM‑CHR and CSLC; keep partial orders set-valued (CC‑UM.5). |
+| **Specialisation breaks SlotKind identity** | Refinements rename SlotKinds or add mandatory parameters to inherited operations. | SlotKinds are invariant; refinements only narrow ValueKinds/guards; add new ops via Extension (CC‑UM.8). |
+| **Unknown coerced to 0/false** | Guard failures silently become “false” or scores become 0. | Use tri-state discipline: `unknown → {degrade|abstain}`; probing lives in LOG branches (CC‑UM.7). |
+| **In-place minting of BaseType** | A mechanism definition introduces a new `U.Type` ad hoc. | `BaseType` references an existing `U.Type`; mint new types via DRR/LEX outside the mechanism (CC‑UM.6). |
 
-#### A.6.1:9.3 - Adopt / Adapt / Reject summary
-
-* **Adopt** formal, law-governed signatures (Institutions + Effects); explicit admissibility predicates.
-    
-* **Adapt** runtime policy execution into *static AdmissibilityConditions + Γ_time* (no embedded evaluators).
-    
-* **Reject** tool-bound semantics, automatic recency heuristics, or any cross-scale arithmetic without CSLC proof.
-
-#### A.6.1:9.4 - Holonic repeatability
-
-The same correspondence holds at **every holonic level**:  
-a part-holon declares its own `OperationAlgebra/LawSet/AdmissibilityConditions`; a whole-holon merges them via Bridges; a meta-holon re-binds mechanisms under a new Γ-closure. All penalties remain in **R / R_eff**, while **F / G** invariants propagate intact.
-
-### A.6.1:10 - 60‑second didactic script
-
-> *“To mint a mechanism, fill a **Mechanism.Intension**: declare **SubjectBlock** (**SubjectKind**, **BaseType**, **SliceSet**, **ExtentRule**, **ResultKind?**) and **ParamKinds**; then **OperationAlgebra/Laws/AdmissibilityConditions** and **Γ_time**; define **Transport** (Bridge/CL with penalties to R only), and **Audit** (UTS + Path pins). Realize it as CAL/LOG/CHR under **A.6**. USM and UNM are already such mechanisms; the same template births comparison, scoring, and publication mechanisms—safely bound to **CG‑Spec**—without leaving the kernel grammar.”*
-
-### A.6.1:11 - Quick “builder’s” checklist (author‑facing)
-
-1. Draft a **run↔design charter**: why this Mechanism, which **guard surfaces** and **comparability** are in scope; which `DesignRunTag`/`CtxState.locus` boundary it mediates; is a **Γ_m (CAL)** builder needed?
-    
-* Fill **Mechanism.Intension** (**SubjectBlock**, **ParamKinds**, **OperationAlgebra**, **LawSet**, **AdmissibilityConditions**, **Applicability**, **Transport**, **Γ_timePolicy**, **PlaneRegime**, **Audit**).
-    
-* Bind **CHR legality & CG‑Spec** when comparing/aggregating (ComparatorSet, ScaleComplianceProfile (SCP), MinimalEvidence, Γ‑fold).
-    
-Ship **UTS + G.10**; wire **G.11** telemetry (PathSlice‑keyed); ensure penalties **route to `R_eff` only**.
-
-### A.6.1:12 - Consequences (informative)
+### A.6.1:9 - Consequences (informative)
 
 * **Uniform kernel shape.** Scope, normalization, comparison families can be authored and compared without lexical drift.
 * **Auditable reuse.** GateCrossings are UTS-visible via **CrossingSurface** (**E.18**); penalties are transparent (**R only**), with **LanePurity** + **Lexical SD** (E.10) checks runnable (GateChecks in **A.21**; Bridge+UTS discipline **A.27**; BridgeCard **F.9**).
 * **Scalarisation avoids illegality.** Partial orders remain set‑valued; cross‑scale arithmetic is blocked by **CG‑Spec/CSLC**.
 
-### A.6.1:13 - Rationale (informative)
+### A.6.1:10 - Rationale (informative)
 
 Anchoring mechanisms in **A.6 Signature→Realization** provides a minimal, typed surface that preserves **USM** set‑algebra and **UNM** “normalize‑then‑compare” quotients while making **Part F (Bridges)** crossings explicit and costed on **R** (never **F/G**).
 
-### A.6.1:14 - Relations (quick pointers)
+### A.6.1:11 - SoTA-Echoing (post-2015 practice alignment) *(informative)*
+
+**Purpose.** To show how the FPF concept of a *Mechanism* (law-governed signature with guards and transport) aligns with, and improves upon, leading research and engineering practices after 2015.  
+All comparisons are *informative*: they serve didactic continuity, not new normative force.
+
+#### A.6.1:11.1 - Contemporary references (post-2015 sources)
+
+**SoTA binding note (E.8:11).** No dedicated `SoTA‑Pack(Mechanisms)` (G.2) is registered at the time of writing; until one exists, this section cites primary post‑2015 sources directly and SHOULD later be reduced to ClaimSheet/CorpusLedger/BridgeMatrix ids (to avoid forking untracked SoTA narrative).
+
+1. **Algebraic effects and handlers** (post‑2015 effect systems and handler implementations) — **Adopt/Adapt.** They motivate the split “operation signature vs handling”; A.6.1 keeps `OperationAlgebra` explicit and adds `LawSet`, `AdmissibilityConditions`, and `Γ_time` so legality and time are not implicit. *(e.g., Hillerström & Lindley, 2018; Multicore/OCaml‑5 effect handlers, 2021–2022).*
+
+2. **Typed semantic translation frameworks** (institution‑style morphisms and functorial data migration) — **Adapt.** A.6.1 uses explicit refinement/extension/quotient structure (`U.MechMorph`) but requires cross‑Context transport to be **Bridge‑only** with penalties routed to **R/R_eff**. *(e.g., Spivak & Schultz, 2017; CQL practice, 2017–2023).*
+
+3. **Policy‑as‑Code** (declarative guard/risk rules) — **Adapt.** A.6.1 turns runtime policies into deterministic, fail‑closed `AdmissibilityConditions` with named Γ_time windows; evaluators and tool binding stay out of Core. *(e.g., Open Policy Agent / Rego, 2016+; UL 4600:2020; ISO 21448:2019).*
+
+4. **Session / typestate types** (post‑2015 protocol safety) — **Adapt.** Protocol constraints inform how guards can restrict legal operator sequences, but A.6.1 keeps the contract as signature+laws and surfaces sequencing constraints as explicit guard predicates rather than hidden state. *(e.g., Scalas & Yoshida, 2016–2018; mainstream session‑type toolchains, 2017–2024).*
+
+5. **Lawful measurement and calibrated uncertainty** (monotone and calibrated learning, conformal prediction) — **Adopt/Adapt.** Modern calibrated methods show why comparability must be explicit; A.6.1 binds induced numeric operations to **CG‑Spec/CSLC** and forbids illegal scalarisation (e.g., ordinal means). *(e.g., Romano et al., 2019; Angelopoulos & Bates, 2021).*
+
+Each source corresponds to a distinct *Tradition*: formal semantics, categorical algebra, compliance automation, protocol safety, and lawful AI.
+
+#### A.6.1:11.2 - Alignment with A.6.1 fields and concepts
+
+| A.6.1 construct (claim) | SoTA practice (post‑2015) | Primary sources (post‑2015) | Alignment delta encoded by A.6.1 | Adopt / Adapt / Reject |
+| --- | --- | --- | --- | --- |
+| **OperationAlgebra + LawSet** | Algebraic effects & handlers separate operation signatures from handlers. | Hillerström & Lindley (2018); OCaml‑5/Multicore OCaml effect handlers (2021–2022). | FPF keeps operator signatures explicit, adds an explicit `LawSet`, and treats admissibility/time as separate surfaces (no hidden context). | Adopt/Adapt |
+| **U.MechMorph** (Refine/Extend/Quotient) | Institution‑style morphisms / functorial data migration provide typed signature translations and quotients. | Spivak & Schultz (2017); CQL ecosystem papers/docs (2017–2023). | FPF reuses the morphism structure but requires cross‑Context use to be stated as `Transport` with an explicit `BridgeId` (F.9) and CL/CL^k/CL^plane regimes; penalties route → `R/R_eff` only (B.3). | Adapt |
+| **AdmissibilityConditions + Γ_timePolicy** | Policy‑as‑Code makes guard/risk predicates executable and reviewable. | Open Policy Agent / Rego (2016+); UL 4600:2020; ISO 21448:2019. | FPF treats policy predicates as deterministic, fail‑closed guards with named validity windows; it forbids implicit “latest” and avoids embedding evaluators in Core. | Adapt |
+| **AdmissibilityConditions** (sequencing) | Session/typestate disciplines constrain legal operation sequences. | Scalas & Yoshida (2016–2018); post‑2017 multiparty session type toolchains. | FPF uses guards to make sequencing constraints explicit and auditable, while leaving the kernel contract as signature+laws (no hidden automata). | Adapt |
+| **CG‑Spec / MM‑CHR binding** | Calibrated/monotone ML and conformal prediction make uncertainty and monotonicity explicit. | Romano et al. (2019); Angelopoulos & Bates (2021). | FPF requires scale legality (CSLC) and forbids ordinal averaging; partial orders remain set‑valued unless a lawful scorer is declared. | Adopt/Adapt |
+
+#### A.6.1:11.3 - Adopt / Adapt / Reject summary
+
+* **Adopt.** The “explicit operations + explicit laws” stance from modern semantics work, and the calibrated/monotone stance from lawful ML, because both reduce hidden assumptions.
+
+* **Adapt.** Typed translation ideas and policy‑as‑code idioms into a kernel form that is Context‑local by default, with explicit guards (`AdmissibilityConditions`) and explicit time windows (`Γ_timePolicy`) instead of implicit recency.
+
+* **Reject.** Tool‑bound semantics, automatic recency heuristics, and any cross‑scale arithmetic without CSLC proof; A.6.1 also rejects implicit cross‑Context/plane reuse.
+
+* **Cross‑Context/plane delta (E.8:11).** Whenever a SoTA practice would reuse semantics across Contexts/planes, A.6.1 requires an explicit `BridgeId` (F.9) plus CL / `CL^k` / `CL^plane` anchors and Φ/Ψ/Φ_plane policy‑ids (B.3), with penalties routed to `R/R_eff` only (never mutating `F/G`).
+
+#### A.6.1:11.4 - Holonic repeatability
+
+The same correspondence holds at **every holonic level**:  
+a part-holon declares its own `OperationAlgebra/LawSet/AdmissibilityConditions`; a whole-holon merges them via Bridges; a meta-holon re-binds mechanisms under a new Γ-closure. All penalties remain in **R / R_eff**, while **F / G** invariants propagate intact.
+
+### A.6.1:12 - Relations (quick pointers)
 
 Builds on **A.6**; instantiates **A.2.6 USM** (ContextSlice, Γ_time, ∩/SpanUnion/translate) and **A.19/C.16 UNM** (classes, ≡\_UNM, validity windows); uses **Part B** (Bridges, CL/CL^k/CL^plane; **no implicit crossings**); binds **CG‑Spec** for any numeric comparison/aggregation; telemetry/publication via **G.10/G.11**.
 
@@ -7659,7 +7802,8 @@ The result: **local convenience, global incoherence** — exactly what A.6.0 and
   * logical relations (KD‑CAL, LOG‑CAL),
   * episteme structures (C.2.1),
   * systems/roles/methods (A/B),
-  * services and APIs (including Method/Service interfaces),
+  * services and APIs (including Method/Service interfaces and ports),
+  * cells in a tables and databases,
   * guards, bridges, and flows in E.TGA,
   * and publication operations (E.17).
     A scheme that is too domain-specific (e.g. “database attributes only”) won’t scale; the same discipline must underlie **all** `U.Signature`d argument/port lists.
@@ -10482,14 +10626,14 @@ In essence, A.18 is the _infrastructure of meaning_ for metrics. It may appear a
 ## A.19 - CharacteristicSpace & Dynamics Hook (A.CHR‑SPACE)
 
 **Non‑duplication note.** This pattern reuses the canonical measurement concepts (`U.Characteristic`, **CSLC** terms) from **A.17/A.18** and relies on **C.16 (MM‑CHR)** for **normalization evidence**. It **does not redefine** units or normalization semantics. **UNM** *names admissible re‑parameterizations within one `U.BoundedContext`* and thereby **induces a context‑local congruence** over charts, written **≡_UNM**, which is a **specialization of the framework’s congruence notion** used in **B.3** (and instantiated for epistemes in **B.1.3**). A **NormalizationFix** selects a canonical representative of an **≡_UNM** class. Timebases and laws remain out of scope (see **A.3.3**).
-**Locality & governance.** A **UNM** is *context‑local*: it is declared within a single `U.BoundedContext` for a given CharacteristicSpace (or family of charts) and **enumerates** (a) the **admissible classes of NormalizationMethod**, (b) the **invariants** they must preserve, (c) **closure** under composition (and inverses where defined), and (d) **validity/versioning rules** (editions, windows). Semantics and evidence backing remain under **C.16**; A.19 constrains how UNM artifacts are *named and used* in state/comparability logic. **Cross‑context reuse** of a UNM **MUST** be declared via **A.6.1 Transport**; when the *describedEntity* changes, declare a **KindBridge (CL^k)**. Any **CL^plane** penalties **route to R/R_eff only**.
+**Locality & governance.** A **UNM** is *context‑local*: it is declared within a single `U.BoundedContext` for a given CharacteristicSpace (or family of charts) and **enumerates** (a) the **admissible classes of NormalizationMethod**, (b) the **invariants** they must preserve, (c) **closure** under composition (and inverses where defined), and (d) **validity/versioning rules** (editions, windows). Semantics and evidence backing remain under **C.16**; A.19 constrains how UNM artifacts are *named and used* in state/comparability logic. **UNM is a `U.Mechanism` instance** (A.6.1) and therefore any cross‑context or cross‑plane reuse **MUST** be declared in the mechanism’s **Transport** clause: **name the BridgeId and channel** (`Scope|Kind`), **record** `ReferencePlane(src,tgt)`, and **declare** any `CL^plane` regime. **No implicit crossings.** When the *describedEntity* changes, declare a **KindBridge (CL^k)** (two‑bridge rule); penalties **route to `R/R_eff` only** and never mutate **F/G**.
 
 **Terminology update (Normalization) — replaces legacy κ‑notation and generic “map” wording**
 **UNM — Unified Normalization Mechanism.** A mechanism that packages admissible re‑parameterizations for a CharacteristicSpace so that values can be normalized for safe comparison **within one `U.BoundedContext`**.
 **NormalizationMethod.** A concrete method within UNM (intensional definition of how to normalize a slot or a vector of slots). **Method classes SHALL be scale‑appropriate:** ratio → positive‑scalar conversion; interval → affine transform; ordinal → order‑preserving monotone map; nominal → categorical re‑map; lookup table (**LUT**) with uncertainty annotations (where declared). These classes are **named consistently** across the spec as: `ratio:scale`, `interval:affine`, `ordinal:monotone`, `nominal:categorical`, `tabular:LUT(+uncertainty)`.
 **NormalizationMethodDescription.** The **epistemic** description of a NormalizationMethod (documentation/spec with bounds, validity window, Evidence Graph Ref).
 **NCV — NormalizedCharacteristicValue.** The **result** of applying a NormalizationMethod to a **coordinate value** (or vector) in a CharacteristicSpace. *Note:* **Characteristics** themselves are **not** normalized; **values** (coordinates) are.
-**NormalizationMethodInstance.** A concrete, editioned **use** of a NormalizationMethod in a CN‑frame or embedding (binds method → slot(s), edition, validity window). Use this term when referring to stored/ID’d artifacts (e.g., in logs), to avoid overloading **map**.
+**NormalizationMethodInstance.** A concrete, editioned **use** of a NormalizationMethod in a CN‑frame or embedding (binds method → `slot_id`(s) (basis keys), edition, validity window). Use this term when referring to stored/ID’d artifacts (e.g., in logs), to avoid overloading **map**.
 **UNM‑congruence (≡_UNM).** Context‑local equivalence relation over **charts** generated by the admissible **NormalizationMethods** declared in the UNM; two charts are **≡_UNM** iff they are related by a chain of admissible, **scale‑appropriate** transformations that preserve the declared invariants.
 **IndicatorChoicePolicy.** Principles/rules for selecting which Characteristics (or their NCVs) become Indicators for decisions.
 **Indicator.** The result of applying an IndicatorChoicePolicy to a set of Characteristics/NCVs; an Indicator is **not** a target value by itself and **not** any normalized value by default.
@@ -10651,7 +10795,15 @@ Given a CharacteristicSpace CS with basis _I_ (slots) and a chosen subset of slo
 **Properties:** Projection is **idempotent** (`π_S ∘ π_S = π_S`) and, if an order or other structure is defined solely on the subspace’s slots, `π_S` preserves that structure (e.g. it will reflect any order that depends only on slots in _S_).
 
 ###### A.19:5.2.1.2 Embedding – **Injection** `ι : CS₁ ↪ CS₂`.
-An **embedding** is a structure-preserving **injection** from one space CS₁ into another space CS₂. It consists of two parts: (a) a mapping of slots from CS₁ to slots of CS₂, and (b) for each such slot, a **NormalizationMethod** (function that translates coordinates from CS₁’s scale into CS₂’s scale when the scales or units differ). Formally, let CS₁ have basis _I₁_ and CS₂ have _I₂_. An embedding defines an injective function _m: I₁ → I₂_ that identifies each slot of CS₁ with a corresponding slot in CS₂. For each slot _i ∈ I₁_, where its scale or unit differs from the target _m(i)_ in CS₂, we provide a **NormalizationMethod** function $n_i: Dom(slot_i) → Dom(m(i))$ that yields an **NCV** in the target domain, is **monotone** and respects the scale types (e.g., converting degrees Fahrenheit to degrees Celsius, or mapping one ordinal ranking to another). Intuitively, an embedding says: “Any coordinate tuple from CS₁ can be interpreted as a coordinate tuple in CS₂, possibly after converting units or re‑scaling, and without losing any information except what the declared **NormalizationMethods** intentionally **coarse‑grain**.” If there is no loss at all (**NormalizationMethods** are identity or strict conversions), the embedding is essentially an inclusion of one space into a larger one; if there is some information loss (e.g., converting a fine‑grained scale to a coarse one), that loss is explicit in the **NormalizationMethodDescription**. **Locality:** Embeddings are defined **within a single `U.BoundedContext`** (i.e., both CS₁ and CS₂ are in the same context). Using an embedding across contexts requires an **Alignment Bridge** (see F.9) with an associated congruence‑loss policy.  **Normalization declaration duties (MUST):** Each NormalizationMethod **MUST** (i) state **monotonicity** w.r.t. the slot’s polarity; (ii) publish a **validity window** (value range and time applicability); and (iii) identify its NormalizationMethod class (ratio:scale / interval:affine / ordinal:monotone / nominal:categorical / tabular:LUT(+uncertainty)). **NormalizationMethods** used in enactment gates **MUST** be current; expired editions require renewal or an explicit Waiver (see C.16). In other words, you cannot assume one context’s space fits into another’s without an explicit Bridge; any attempt to do so must treat it as a cross‑context alignment with potential loss.
+An **embedding** is a structure-preserving **injection** from one space CS₁ into another space CS₂. It consists of two parts: (a) a mapping of slots from CS₁ to slots of CS₂, and (b) for each such slot, a **NormalizationMethod** (function that translates coordinates from CS₁’s scale into CS₂’s scale when the scales or units differ). Formally, let CS₁ have basis _I₁_ and CS₂ have _I₂_. An embedding defines an injective function _m: I₁ → I₂_ that identifies each slot of CS₁ with a corresponding slot in CS₂. 
+
+For each slot _i ∈ I₁_, where its scale or unit differs from the target _m(i)_ in CS₂, we provide a **NormalizationMethod** (referenced operationally as a **NormalizationMethodInstance** with edition and validity window) function $n_i: Dom(slot_i) → Dom(m(i))$ that yields an **NCV** in the target domain, is **monotone** and respects the scale types (e.g., converting degrees Fahrenheit to degrees Celsius, or mapping one ordinal ranking to another). 
+
+Intuitively, an embedding says: “Any coordinate tuple from CS₁ can be interpreted as a coordinate tuple in CS₂, possibly after converting units or re‑scaling, and without losing any information except what the declared **NormalizationMethods** intentionally **coarse‑grain**.” If there is no loss at all (**NormalizationMethods** are identity or strict conversions), the embedding is essentially an inclusion of one space into a larger one; if there is some information loss (e.g., converting a fine‑grained scale to a coarse one), that loss is explicit in the **NormalizationMethodDescription**. **Locality:** 
+
+Embeddings are defined **within a single `U.BoundedContext`** (i.e., both CS₁ and CS₂ are in the same context). Using an embedding across contexts requires an **Alignment Bridge** (see F.9) and **MUST** be declared via the relevant mechanism’s **A.6.1 Transport** clause (BridgeId + channel + `ReferencePlane(src,tgt)` + any `CL^plane`; no implicit crossings).  
+
+**Normalization declaration duties (MUST):** Each NormalizationMethod **MUST** (i) state **monotonicity** w.r.t. the slot’s polarity; (ii) publish a **validity window** (value range and time applicability); and (iii) identify its NormalizationMethod class (ratio:scale / interval:affine / ordinal:monotone / nominal:categorical / tabular:LUT(+uncertainty)). **NormalizationMethods** used in enactment gates **MUST** be current; expired editions require renewal or an explicit Waiver (see C.16). In other words, you cannot assume one context’s space fits into another’s without an explicit Bridge; any attempt to do so must treat it as a cross‑context alignment with potential loss.
 
 **Method‑class note.** For **ratio** scales use positive‑scalar conversions; for **interval** scales use **affine** transforms; for **ordinal** scales use **order‑preserving** monotone maps; for **nominal** scales use **categorical** re‑maps; LUT with uncertainty may be used where declared with evidence.
 
@@ -10689,6 +10841,7 @@ If we have state _x_ in space CS₁ and state _y_ in space CS₂ (possibly the s
 **Comparability rule (normalize‑then‑compare).** We say _x_ **≼<sub>normalization</sub>** _y_ if, after applying the normalization **function** `N` to _x_ to translate it into space CS₂, the resulting point **N(x)** (a vector of **NCVs**) is **≼<sub>coord</sub>** _y_ in the target space. In other words, we don’t compare _x_ and _y_ directly; we compare **N(x)** to _y_, where both are now expressed in the **same** space (CS₂) with the same units and definitions. Normalization‑based comparison thus reduces to the coordinatewise case _after_ a transformation.
 
 If the normalization crosses context boundaries (i.e., CS₁ and CS₂ are in different bounded contexts), then by FPF policy this mapping must be treated as a formal **Bridge** alignment with an associated **congruence‑loss (CL)** level. In such cases, any conclusions drawn carry an **assurance penalty**: the confidence in comparability is discounted according to the worst-case loss of meaning along the mapping. (See also B.3’s `Φ(CL)` rule for how a CL penalty factors into trustworthiness scores.)
+If the normalization crosses context boundaries (i.e., CS₁ and CS₂ are in different bounded contexts), then by FPF policy this mapping must be treated as a formal **Bridge** alignment with an associated **congruence‑loss (CL)** level and declared via **A.6.1 Transport** (BridgeId + channel + `ReferencePlane(src,tgt)`; no implicit crossings). In such cases, any conclusions drawn carry an **assurance penalty**: the confidence in comparability is discounted according to the worst-case loss of meaning along the mapping. (See also B.3’s `Φ(CL)` rule for how a CL penalty factors into trustworthiness scores.)
 
 **Auditability.** Each NormalizationMethod should be fully specified and transparent. At minimum, one should document the functional form or mapping table being used and the intended domain of validity (**NormalizationMethodDescription**). In the measurement architheory (C.16), normalization comes with calibration evidence/rationale and a note of its valid range or conditions. (For example, a method translating lab scores to field scores might note it’s valid only for a certain operating range.) While A.19 does not require recording these details, it assumes that such **evidence and bounds** are handled by the measurement framework (MM‑CHR) outside the core space definition. The key here is that **no comparison is magic** – if values differ in scale or context, a declared monotonic transformation must bridge them, and its limitations should be known.
 
@@ -10730,15 +10883,15 @@ If for some critical Characteristic there is **no valid NormalizationMethod** to
 
 Canonical evaluation chain (notation‑neutral):
 
-`raw coords → Normalize (UNM.NormalizationMethod) → Quotient / NormalizationFix → (optional) Indicatorization (via IndicatorChoicePolicy) → (optional) Order/Distance overlay → Evaluate Checklist → StateAssertion → Green‑Gate`
+`raw coords → Normalize (UNM.NormalizationMethodInstance) → Quotient / NormalizationFix → (optional) Indicatorization (via IndicatorChoicePolicy) → (optional) Order/Distance overlay → Evaluate Checklist → StateAssertion → Green‑Gate`
 
-**Strict distinction.** Steps may be **co‑implemented**, but are **logically distinct** and **MUST** be referenceable in assertions (**NormalizationMethod/UNM** name or formula, overlay kind). A gate is **invalid** if any required step lacks a current, valid referent (e.g., expired **NormalizationMethod** edition).
+**Strict distinction.** Steps may be **co‑implemented**, but are **logically distinct** and **MUST** be referenceable in assertions (**NormalizationMethodInstance/UNM** name or formula, overlay kind). A gate is **invalid** if any required step lacks a current, valid referent (e.g., expired **NormalizationMethodInstance** edition).
 
 #### A.19:5.3 - Operator library (notation‑neutral)
 
 **Spaces:** `Sub` (projection), `Emb` (embedding), `Prod` (product), `Quot` (quotient by declared equivalence), `NormalizationFix` (fix to a named chart/edition).
 
-**States/criteria transport:** `Pull` (pull checklist via embedding/NormalizationMethod), `Push` (push assertion along embedding with proof/waiver), `Indicatorize` (apply **IndicatorChoicePolicy** to select Indicators), `Align_B` (cross‑context alignment via Bridge with CL), `Fold_Γ` (admissible aggregation/accumulation per B.1, with WLNK/MONO constraints).
+**States/criteria transport:** `Pull` (pull checklist via embedding/NormalizationMethodInstance), `Push` (push assertion along embedding with proof/waiver), `Indicatorize` (apply **IndicatorChoicePolicy** to select Indicators), `Align_B` (cross‑context alignment via Bridge with CL), `Fold_Γ` (admissible aggregation/accumulation per B.1, with WLNK/MONO constraints).
 
 **OP‑1 (Normative).** If `Align_B` is used in **gating**, the **Bridge used** and its **CL** **MUST** be declared in the assurance argument; the corresponding Φ(CL) penalty is applied per B.3. Silent cross‑context reuse is forbidden. (A.19 does not mandate any storage/ID scheme.)
 
@@ -10872,7 +11025,15 @@ CN‑Spec {
     // if needed: missingness?, admissible_domain? (MM‑CHR‑consistent metadata)
   }]
   chart             : { reference_state, coordinate_patch, measurement_protocol_ref }
-  normalization     : { UNM_id?, methods: [NormalizationMethodId], instances?: [NormalizationMethodInstanceId], invariants, admissible_reparameterizations, method_descriptions: [NormalizationMethodDescriptionRef], fix?: <NormalizationFixSpec> }
+  normalization     : {
+    UNM_id?,                                 // A.6.1 `U.Mechanism` (UNM) id, scoped to this Context/Edition
+    methods: [NormalizationMethodId],         // admissible (intensional) methods in that UNM
+    instances?: [NormalizationMethodInstanceId], // editioned uses referenced in logs/gates
+    method_descriptions: [NormalizationMethodDescriptionRef],
+    admissible_reparameterizations,
+    invariants,
+    fix?: <NormalizationFixSpec>
+  }
   comparability     : { mode ∈ {coordinatewise, normalization-based}, minimal_evidence }
   indicator_policy? : { IndicatorChoicePolicyRef, scope, edition }
   acceptance        : { checklist_for_admission, window, evidence_anchors } // gates RSG state checks
@@ -10884,9 +11045,9 @@ CN‑Spec {
 
 **Reading:** *A CN‑frame is a context‑local lens with declared characteristics, units, a chart to read them, a **UNM/Normalization** that states what “doesn’t matter,” explicit rules for when a datum counts and how many can be safely folded, and (optionally) an **IndicatorChoicePolicy** to select Indicators. Not every Characteristic (even with an NCV) is an Indicator; Indicators arise from policy.*
 
-`NormalizationKinds`, `MetricSpec` and `QuotientSpec` are **CN‑frame‑level** governance metadata; per **A19‑CS‑5** the kernel `CharacteristicSpace` carries **no NormalizationMethods** or composition; normalization lives in **MM‑CHR**.
+`NormalizationKinds`, `MetricSpec` and `QuotientSpec` are **CN‑frame‑level** governance metadata; per **A19‑CS‑5** the kernel `CharacteristicSpace` carries **no NormalizationMethods** or composition; normalization lives in **MM‑CHR**. In A.6.1 terms, `UNM_id` points to a **`U.Mechanism`**; the CN‑Spec **references** that mechanism and does **not** introduce implicit **Transport**.
 
-**L‑CN‑Spec‑NORM‑IDs**: where stored artifacts are referenced (e.g., in assurance logs), use **NormalizationMethodId**/**NormalizationMethodInstanceId**; avoid generic “map” nouns.
+**L‑CN‑Spec‑NORM‑IDs**: where stored artifacts are referenced (e.g., in assurance logs), use **NormalizationMethodId**/**NormalizationMethodInstanceId**; avoid generic “map” nouns. If you introduce reference-typed fields, obey **A.6.5** (`*Ref` reserved for reference fields; `*Slot` reserved for SlotKinds).
 
 #### A.19.D1:4.2 - **CN‑frame Registry** (per Context)
 
@@ -10902,14 +11063,17 @@ Cross‑context reuse occurs **only** via explicit **Alignment Bridges** (F.9) b
 
 ```
 Bridge CN‑frameA@Context1  →  CN‑frameB@Context2
+  channel: {Scope|Kind}                 // F.9 (and A.6.1 Transport)
+  planes: ReferencePlane(src,tgt)       // C.2.1 (must be recorded)
   CL: {3|2|1|0}
+  CL_plane?: {3|2|1|0}                  // only when planes differ
   kept_characteristics: [… ]
   lost_characteristics: [… ]
   transform: {pullback | pushforward | re-scaling | re-binning}
   extra_guards: {additional evidence / reviewer role / waiver speech-act}
 ```
 
-**CL policy (reference).** **CL levels and the penalty Φ(CL) are defined in B.3** (CL is **ordinal**; do not average). **Mechanism authors SHALL declare crossings in the `Transport` clause of A.6.1 U.Mechanism; penalties from scope/kind/plane **route to `R/R_eff` only** (never to **F/G**). This CN‑Spec may **add operational guards** per level (e.g., “extra reviewer at CL=1”, “waiver at CL=2”), but it **does not redefine** the scale or Φ. For episteme‑specific frames, see also **B.1.3**.
+**CL policy (reference).** **CL levels and the penalty Φ(CL) are defined in B.3** (CL is **ordinal**; do not average). In A.6.1 terms, any cross‑context (or cross‑plane) reuse is declared **only** via a mechanism’s **Transport** clause: **name the BridgeId and channel** (`Scope|Kind`) and **record** `ReferencePlane(src,tgt)`; if planes differ, declare the `CL^plane` regime. **Transport is declarative** (it does not introduce a `U.Transfer` edge and does not restate CL ladders or Φ tables). When both scope and *describedEntity* change, apply the **two‑bridge rule** (Scope bridge + **KindBridge (CL^k)**). Penalties from scope/kind/plane **route to `R/R_eff` only** (never to **F/G**). This CN‑Spec may **add operational guards** per level (e.g., “extra reviewer at CL=1”, “waiver at CL=2”), but it **does not redefine** the scale or Φ. For episteme‑specific frames, see also **B.1.3**.
 
 ### A.19.D1:5 - Conformance Checklist (normative)
 
@@ -10929,7 +11093,7 @@ Bridge CN‑frameA@Context1  →  CN‑frameB@Context2
 
 **CC‑A19.D1‑7 (Aggregation discipline).** `aggregation.Γ_fold` **MUST** specify WLNK/COMM/LOC/MONO choices and the **time policy** (e.g., average of rates vs integral of counts). **No free‑hand averages.**
 
-**CC‑A19.D1‑8 (Bridge‑only reuse).** Cross‑context consumption **MUST** cite a **Bridge** with CL and **loss notes**; coordinate‑by‑name without a Bridge **fails**. If the data participate in **gating/assurance**, apply **Φ(CL) per B.3**; this CN‑Spec does not restate Φ.
+**CC‑A19.D1‑8 (Bridge‑only reuse).** Cross‑context consumption **MUST** cite a **Bridge** with: (i) `channel ∈ {Scope|Kind}`, (ii) recorded `ReferencePlane(src,tgt)`, (iii) CL (and `CL^plane` when planes differ), and (iv) **loss notes**; coordinate‑by‑name without a Bridge **fails**. If the data participate in **gating/assurance**, apply **Φ(CL) per B.3**; this CN‑Spec does not restate Φ.
 
 **CC‑A19.D1‑9 (SoD & roles).** Editing CN‑Spec and admitting data **MUST** be performed by **different** roles (⊥ enforced): `CN‑frameStewardRole ⊥ CN‑frameCertifierRole` inside the same context.
 
@@ -22165,7 +22329,7 @@ If the problem requires **open‑ended generation** of tasks/environments, S2 **
 
 ### C.22:10 - Interfaces & Data Paths
 
-*Inputs.* `ProblemProfile` (...Description), CG-Spec ids, Evidence Graph Ref (A.10), D.CTX; (if QD) CharacteristicSpaceRef/ArchiveConfig/EmitterPolicyRef configs; (if OEE) GeneratorIntent.
+*Inputs.* `ProblemProfile` (…Description), CG-Spec ids, Evidence Graph Ref (A.10), D.CTX; (if QD) CharacteristicSpaceRef/ArchiveConfig/EmitterPolicyRef configs; (if OEE) GeneratorIntent.
  *Produces.* `TaskSignature@Context` (S2) with provenance; **SCR-visible** fields; UTS Name Cards for any minted traits; (if QD/OEE) archive/portfolio semantics and telemetry hooks declared.
  *Consumed by.* **G.5** (Eligibility/Selection kernel), **G.4** (Acceptance/Evidence), **C.23** (admit/degrade/abstain rules; maturity ladder).
 
@@ -24480,7 +24644,7 @@ IDs/instances: **flat with delimiters** (context‑defined) but never collide wi
 
 **L‑ROLE — disciplined use of *Role***
 * **Role** is always **Role Enactment for the `U.Holon`/`U.System` kind** (agentive use).
-* **Param‑slot / relation‑endpoint guard.** Do **not** use the morpheme **`Role`** for **formal parameter positions** in operator algebra declarations (`OperationAlgebra`) or Signature arguments. Reserve **`Role`** for **agentive kinds** only (A.2/F.4/F.6). Use a **`ParamKinds`** list (name→Kind) or `RelationEndpointKinds` to type formal slots. Same for similar situations (table columns, tuple placements): use MG-DA with domain‑**specific** terminology, never “Role”. 
+* **Param‑slot / relation‑endpoint guard.** Do **not** use the morpheme **`Role`** for **formal parameter positions** in operator algebra declarations (`OperationAlgebra`) or Signature arguments. Reserve **`Role`** for **agentive kinds** only (A.2/F.4/F.6). Prefer SlotKinds + SlotSpecs (A.6.5) to type formal slots; if a didactic list is useful, use a `ValueKindView` (name→ValueKind) projection derived from SlotSpecs/SlotIndex. Same for similar situations (table columns, tuple placements): use MG-DA with domain‑**specific** terminology, never “Role”. 
 
 #### E.10:8.2 - Forbidden suffixes & the DevOps and Data Governance Lexical Firewall
 
@@ -27512,13 +27676,14 @@ Provide a **disciplined, compositional way to publish morphisms** (arrows) acros
 ### E.17:5 - Solution — the **MVPK Kit**
 
 #### E.17:5.0 - USM anchoring (normative)
-* **PublicationScope (USM).** Define `U.PublicationScope` in **USM** analogously to `U.WorkScope` and `U.ClaimScope`. An MVPK kit instance is **governed by** a `PublicationScope` that fixes:
+* **PublicationScope (USM).** `U.PublicationScope` is defined in **USM** (A.2.6 §6.5) analogously to `U.WorkScope` and `U.ClaimScope` as a **set‑valued scope object** over `U.ContextSlice`. In MVPK, every emitted `U.View` SHALL declare a `U.PublicationScope` that bounds where that face is admissible.  
+  * **Non‑overload rule.** `U.PublicationScope` MUST NOT encode viewpoint choice, MVPK profile selection, or Publication Characteristics (PC); those are governed by `PublicationVPId`/`U.Viewpoint` and MVPK profile rules (§5.1/§5.2/§5.5).
+* **Scope lineage.** `U.PublicationScope` participates in the same USM lineage regime as `U.WorkScope`/`U.ClaimScope` (Δ‑moves, editioning and migration rules); MVPK emits faces **under** a declared `PublicationScopeId`.
+* **MVPK profile (kit configuration).** The canonical MVPK profiles (MVPK‑Min/Lite/SetReady/Max) fix:
   * (a) the **viewpoint index** `Σ` and its partial order `⪯`,
-  * (b) the **profile** (MVPK‑Min/Lite/SetReady/Max) as a *configuration* of this scope,
-  * (c) the admissible **Publication characteristics (PC)** and required **pinning contracts**,
-  * (d) any **cross‑Context/plane** constraints (Bridge/CL policies) applicable to emitted faces.
-* **Scope lineage.** `PublicationScope` participates in the same USM lineage regime as `WorkScope`/`ClaimScope` (editioning and migration rules); MVPK emits faces **under** a declared `PublicationScopeId`.
-* **L, P, D, E quartet.** The canonical MVPK‑Max scope enumerates exactly four **face kinds**: `PlainView (P)`, `TechCard (T)`, `InteropCard (I)`, `AssuranceLane (A)`. If a program elects to retain the mnemonic **(L, P, D, E)** tuple, it MUST map it 1‑to‑1 onto these **face kinds** within `PublicationScope` and SHALL NOT introduce additional kinds without a USM extension.
+  * (b) the admissible **Publication characteristics (PC)** and required **pinning contracts**,
+  * (c) any cross‑Context/plane constraints (Bridge/CL policies) applicable to emitted faces.
+* **L, P, D, E quartet.** The canonical MVPK‑Max profile enumerates exactly four **face kinds**: `PlainView (P)`, `TechCard (T)`, `InteropCard (I)`, `AssuranceLane (A)`. If a program elects to retain the mnemonic **(L, P, D, E)** tuple, it MUST map it 1‑to‑1 onto these **face kinds** and SHALL NOT introduce additional kinds without a USM extension.
 
 #### E.17:5.1 - Terminology (normative)
 
@@ -27552,13 +27717,13 @@ Cross‑context views **SHALL** cite Bridge + CL; **CL penalties apply to R only
 * Avoid geometric metaphors (axis/dimension) for publication artifacts; use **Characteristic/CharacteristicSpace** only when referring to CHR‑MM entities.
 * **Non‑collision guard.** `ViewFamilyId` (lexical tag for viewpoint families) MUST NOT be used to name any `U.View` or surface kind; MVPK face kinds remain **{PlainView, TechCard, InteropCard, AssuranceLane}** only.
 
-**MVPK‑Max viewpoints (normative; exactly four; governed by PublicationScope):**
+**MVPK‑Max viewpoints (normative; exactly four; governed by the MVPK profile):**
 * `PlainView` (explanatory prose view)    
 * `TechCard` (typed catalog card)    
 * `AssuranceLane` (evidence bindings/lanes)
 * `InteropCard` (conceptual interoperability view; **mapping to concrete exchange formats lives in Annex/Interop; Part E does not specify schemas**)
 
-**Lean profiles (small‑team friendly, optional; as PublicationScope configurations):**
+**Lean profiles (small‑team friendly, optional; as MVPK kit profiles):**
 * **MVPK‑Min (F0–F1):** Σ = {`PlainView`, `TechCard‑Lite`}. `AssuranceLane` omitted. No interop face.
 * **MVPK‑Lite (F1–F3):** Σ = {`PlainView`, `TechCard‑Lite`, `AssuranceLane‑Lite` gated by crossing trigger}. `InteropCard` only if external consumers exist.
 * **MVPK‑SetReady (F3–F5):** add `InteropCard` when replayability or external interchange is required (details outside Part E).
@@ -28267,8 +28432,8 @@ This arrangement guarantees **functorial publication** (commuting squares on cro
 
 ## E.19 - Pattern Quality Gates: Review & Refresh Profiles
 
-> **Type:** Architectural (A)
-> **Status:** New
+> **Type:** Architectural pattern
+> **Status:** Stable
 > **Normativity:** Normative
 
 ### E.19:1 - Problem frame
@@ -28309,36 +28474,34 @@ A **Pattern Check Profile (PCP)** is a named bundle of check families. Profiles 
 
 **Terminology note (disambiguation).** PQG/PCP are editorial review constructs in the authoring plane (Part E). They are distinct from enactment/runtime gating constructs such as `OperationalGate(profile)` / `GateProfile` (A.21), which govern Work transitions and gate decision policies elsewhere in FPF.
 
-**Mint vs reuse.** This pattern mints **PQG**, **PCP**, and the profile IDs **PCP‑BASE/MOD/PRAG/NORM/SOTA/BRIDGE/TERM/REFRESH**. It reuses existing FPF terms (e.g., **Delta‑Class**, **DRR**, **Bridge**, **CL**, **SoTA Synthesis Pack**) without changing their meanings.
+**Mint vs reuse.** This pattern mints **PQG**, **PCP**, and the profile IDs **PCP‑BASE/MOD/PRAG/NORM/SOTA/BRIDGE/TERM/DEONT/REFRESH**. It reuses existing FPF terms (e.g., **Delta‑Class**, **DRR**, **Bridge**, **CL**, **SoTA Synthesis Pack**) without changing their meanings.
 
 #### E.19:4.1 - Define the review target
 
-A review **SHOULD** propose revisions to a target pattern (including didactic restructuring) that positively affect downstream usage and interoperability. Formal/template defects (e.g., non‑compliance with E.8 structure) have lower review priority than semantic/ontological defects or non‑SoTA Solutions, but they **MUST** be corrected before admission (or before closing a refresh run).
+A review **SHOULD** propose revisions to a target pattern (including didactic restructuring) that positively affect downstream usage and interoperability. Formal/template defects (e.g., non‑compliance with E.8 structure or not conforming to RFC deontic terminology) have lower review priority than semantic/ontological defects or non‑SoTA Solutions, but they also **MUST** be corrected.
 
-E.g. if the header block is missing or incomplete, **continue with ontology and semantic review**. Treat missing header fields as a mechanical defect to patch (PCP‑BASE #7), not as a reason to stop.
+E.g. if the header block is missing or incomplete, **continue with ontology and semantic review first**. Treat missing header fields as a mechanical defect to patch (PCP‑BASE #7), not as a reason to stop.
 
 The run **SHOULD** give best-known **Delta‑Class (Δ‑0…Δ‑3)** and record an initial **impact radius** (dependent patterns/tests/relations that need be changed due to pattern norms), using existing definitions where available (e.g., the LEX‑AUTH protocol).
 
 #### E.19:4.2 - Apply the baseline profile to every run
 
-Every run MUST include **PCP‑BASE**, which checks the following families.
-Mechanical checks (template/heading discipline, RFC-keyword hygiene, LEX-BUNDLE mechanical violations) SHOULD be satisfied via auditable lint/harness traces where available; reviewer depth SHOULD prioritize the load-bearing surfaces in E.19:4.2.1.
+Every run MUST include **PCP‑BASE**, reviewer depth SHOULD prioritize the load-bearing surfaces in E.19:4.2.1.
 
-1. **Internal coherence (contract ↔ solution)**
-   The Conformance Checklist matches the Solution (no “orphan requirements” and no “unclaimed obligations”).
-2. **Deontic clause hygiene (RFC keywords)**
-   Deontic requirements are expressed with RFC-style keywords (see H‑8); obligations are not smuggled into prose as informal imperatives. Admissibility/validity constraints are stated non‑deontically as `Invariant:` / `Well‑formedness constraint:` predicates and referenced from the Conformance Checklist when enforceable. 
-   **Subject discipline for RFC keywords.** If a sentence uses RFC keywords, its grammatical subject **MUST** be an agent or a publishable artefact (author, reviewer, tool, model, record, validator). RFC keywords **MUST NOT** modify modeled‑world entities (e.g., “Earth”, “RoleAssignment”, “Role”, “holon”) — express those as `Invariant:` / `Well‑formedness constraint:` predicates instead, and (if needed) reference them from CC items.
-3. **Lexical discipline & reserved vocabulary**
+1. **Internal coherence (problem ↔ contract ↔ solution)**
+   The Conformance Checklist matches Problem statement and the Solution (no “orphan requirements” and no “unclaimed obligations”).
+2. **Lexical discipline & reserved vocabulary**
    Terms and registers follow lexical rules; ambiguous “everyday” synonyms do not silently replace kernel vocabulary.
-4. **SoTA‑Echoing minimum compliance (E.8)**
+3. **SoTA‑Echoing minimum compliance (E.8)**
    SoTA‑Echoing satisfies the E.8 obligations applicable to the pattern kind (Architectural vs Definitional), including post‑2015 sourcing and explicit adopt/adapt/reject stances. If a SoTA Synthesis Pack exists for the topic, SoTA‑Echoing binds to it rather than forking an untracked narrative; any divergence of pattern norms from contemporary practice is explicitly stated as such. SoTA‑Echoing **MUST** be non‑decorative: the Solution and other load‑bearing sections **MUST** align with the declared SoTA stance, or explicitly justify any divergence.
-5. **Cross-pattern compatibility & impact radius**
+4. **Cross-pattern compatibility & impact radius**
    Relations are consistent with declared dependencies and dependents; declared scope/impact is compatible or explicitly limited.
-6. **Didactic grounding**
+5. **Didactic grounding**
    Archetypal Grounding is present and teaches the concept with concrete anchors, not only abstractions.
-7. **Template & section integrity**
-   This is lowest priority for review depth and **SHOULD NOT** consume effort that would displace ontology/semantics/SoTA checks. Canonical template sections **MUST** be present and ordered per E.8 before admission (or before closing a refresh run).
+6. **Template & section integrity**
+   This is lowest priority for review depth and **SHOULD NOT** consume effort that would displace ontology/semantics/modularity/slots/SoTA checks. 
+7. **Modularity & contradiction hygiene**
+   The pattern **SHOULD NOT** be overloaded or expands obligations/dependencies  significantly. Checks include: scope hygiene, split/refactor recommendation when warranted, and contradiction scan against neighbor patterns in Relations. Pattern should respect balance of coheiseveness and coupling of its content among other patterns in FPF. If pattern define specialization it should not show mix of slots/parameters of different levels. 
 
 ##### E.19:4.2.1 - Triage: spend depth on load-bearing surfaces without making reviews heavier
 
@@ -28351,20 +28514,19 @@ PQG is meant to increase *semantic and ontological trust*, not to turn every rev
   * **definitions and mint/reuse decisions** (new terms, renamed terms, scope claims baked into names, names that are not overloaded and are properly chosen),
   * **cross-context / cross-plane claims** (Bridge hygiene and “sameness” assertions),
   * **SoTA** (when the pattern claims state‑of‑the‑art rather than a popular‑but‑outdated solution or vocabulary),
+  * **modularity and Slot discipline of A.6.5** that provide evolvability of FPF,
+  * **absence of contradictions in a pattern**,
   * **Relations** that define compatibility and impact radius.
-* Treat **low-signal surfaces** as “scan-level” unless they change meaning: headings/formatting, micro-typos, stylistic polish, and non-load-bearing narrative refactors.
-* **Do not block semantic review on template defects.** Missing header block fields (E.8 H‑5), missing canonical sections, or a missing footer marker are fixable integrity defects. Patch them quickly and continue with the load-bearing surface checks in the same run.
-* **Report ordering (impact-first).** In run outputs and remediation patches, prioritize fixes on ontology, semantic and SoTA-related load-bearing surfaces first; group low-signal formatting/typos into a single hunk at the end unless they change meaning.
+* Treat **low-signal surfaces** as “scan-level” unless they change meaning: headings/formatting, micro-typos, stylistic polish, and non-load-bearing narrative refactors, compliance to deontic RFC.
+* **Do not block semantic review on template and RFC compliance defects.** Missing header block fields (E.8 H‑5), missing canonical sections, or a missing footer marker are fixable integrity defects. Patch them quickly and continue with the load-bearing surface checks in the same run.
+* **Report ordering (impact-first).** In run outputs and remediation patches, prioritize fixes on ontology, semantic, modularity and SoTA-related load-bearing surfaces first; group low-signal formatting/typos into a single hunk at the end unless they change meaning.
 
 #### E.19:4.3 - Add risk-driven profiles
-
-**PCP‑MOD (Modularity & contradiction hygiene)** — Trigger: the pattern is overloaded or expands obligations/dependencies significantly.
-Checks include: scope hygiene, split/refactor recommendation when warranted, and contradiction scan against neighbor patterns in Relations. Pattern should respect balance of coheiseveness and coupling of its content among other patterns in FPF.
 
 **PCP‑PRAG (Pragmatic utility & adoption)** — Trigger: the pattern is Normative and claims practice guidance.
 Checks include: minimally viable example, non-decorative Consequences/Anti-Patterns, and an explicit “So what?” adoption test.
 
-**PCP‑REFRESH (Staleness & compatibility refresh)** — Trigger: the run refreshes an existing pattern, or staleness signals are present (e.g., outdated SoTA rows, renamed/superseded Relations targets, terminology drift, or an explicit refresh window in LAT/DRR).
+**PCP‑REFRESH (Staleness & compatibility refresh)** — Trigger: staleness signals are present (e.g., outdated SoTA rows, renamed/superseded Relations targets, terminology drift, or an explicit refresh window in LAT/DRR).
 Checks include:
 
 * refresh‑sensitive claims are identified (time‑bounded or ecosystem‑bounded) and either (a) updated with post‑2015 evidence **and** matching Solution changes, or (b) explicitly scope‑limited and labeled as historical lineage,
@@ -28402,6 +28564,12 @@ Checks include:
 * “mint vs reuse” decision is explicit,
 * naming follows the local-first naming protocol and avoids scope smuggling (roles/metrics/stages baked into labels; overloaded words used as terms with a local sense). Remediation **SHOULD** use F.18,
 * deprecated aliases and continuity rules are respected.
+
+**PCP-DEONT (Deontic clause hygiene - RFC keywords)** - Trigger: the pattern mismatch admissibility (like in laws in physics) and deontic laws (like in law enforcement). 
+Checks include:
+* Deontic requirements are expressed with RFC-style keywords (see H‑8); 
+* obligations are not smuggled into prose as informal imperatives. Admissibility/validity constraints are stated non‑deontically as `Invariant:` / `Well‑formedness constraint:` predicates and referenced from the Conformance Checklist when enforceable. 
+* **Subject discipline for RFC keywords.** If a sentence uses RFC keywords, its grammatical subject **MUST** be an agent or a publishable artefact (author, reviewer, tool, model, record, validator). RFC keywords **MUST NOT** modify modeled‑world entities (e.g., “Earth”, “RoleAssignment”, “Role”, “holon”) — express those as `Invariant:` / `Well‑formedness constraint:` predicates instead, and (if needed) reference them from CC items.
 
 #### E.19:4.4 - Decision outcomes
 
@@ -28444,11 +28612,10 @@ Bias risks and mitigations:
 | --- | --- | --- |
 | **CC‑E19‑1 (Baseline is mandatory).** | Every PQG run **MUST** apply **PCP‑BASE** to the review target. | Ensures a uniform minimum gate across all pattern kinds. |
 | **CC‑E19‑2 (Profile selection is auditable).** | The run record **MUST** state (a) the selected PCPs, (b) the trigger(s) for each non‑BASE profile, and (c) any override decisions. Any override of a triggered profile **MUST** record why the trigger is a false positive and what compensating check(s) were applied instead. | Makes depth decisions repeatable and reviewable. |
-| **CC‑E19‑3 (Refresh runs include PCP‑REFRESH).** | A refresh run **MUST** include **PCP‑REFRESH** and explicitly decide for each refresh‑sensitive claim whether it is updated (with matching Solution changes) or scope‑limited/labeled as historical lineage. | Prevents quiet decay and accidental mis-teaching. |
-| **CC‑E19‑4 (Delta‑Class & impact for breaking change levels).** | If the run proposes or accepts a change that is **Δ‑2/Δ‑3** (per E.15), the run record **MUST** include Delta‑Class, an impact radius, and a DRR pointer; it **MUST** confirm that required harness/Bridge refresh obligations are triggered where applicable. | Keeps evolution controlled and compatible with downstream dependencies. |
-| **CC‑E19‑5 (Contract coherence is enforced).** | Remediation **MUST** eliminate “orphan” obligations and “unclaimed” requirements by aligning the target pattern’s Conformance Checklist, deontic clauses, and admissibility constraints with its Solution. | Preserves the CC as the enforceable contract surface. |
-| **CC‑E19‑6 (Triage & noise discipline).** | The run **SHOULD** prioritize load‑bearing surfaces (CC, deontic clauses, admissibility constraints, definitions, Relations, SoTA) and keep purely mechanical edits minimal. Template defects **MUST** be fixed before admission (or before closing a refresh run) but **MUST NOT** be used to skip semantic review. | Improves semantic trust without turning review into lint worship. |
-| **CC‑E19‑7 (Patch-first output).** | The run output **MUST** include a remediation patch (English, unified diff, fenced) and a compact list of blocking findings, ordered by semantic impact (load‑bearing surfaces first). | Ensures actionability and consistent reporting. |
+| **CC‑E19‑3 (Delta‑Class & impact for breaking change levels).** | If the run proposes or accepts a change that is **Δ‑2/Δ‑3** (per E.15), the run record **MUST** include Delta‑Class, an impact radius, and a DRR pointer; it **MUST** confirm that required harness/Bridge refresh obligations are triggered where applicable. | Keeps evolution controlled and compatible with downstream dependencies. |
+| **CC‑E19‑4 (Contract coherence is enforced).** | Remediation **MUST** eliminate “orphan” obligations and “unclaimed” requirements by aligning the target pattern’s Conformance Checklist, deontic clauses, and admissibility constraints with its Solution. | Preserves the CC as the enforceable contract surface. |
+| **CC‑E19‑5 (Triage & noise discipline).** | The run **SHOULD** prioritize load‑bearing surfaces (e.g. CC, content of deontic clauses and content of admissibility constraints, definitions, Relations, SoTA, modularity) and keep purely mechanical edits (e.g. RFC format of deontic clauses) minimal. Template defects **MUST** be fixed before admission (or before closing a refresh run) but **MUST NOT** be used to skip semantic review. | Improves semantic trust without turning review into lint and RFC compliance worship. |
+| **CC‑E19‑6 (Patch-first output).** | The run output **MUST** include a remediation patch (English, unified diff, fenced) and a compact list of blocking findings, ordered by semantic impact (load‑bearing surfaces first). | Ensures actionability and consistent reporting. |
 
 ### E.19:8 - Common Anti-Patterns and How to Avoid Them
 
@@ -28459,7 +28626,7 @@ Bias risks and mitigations:
 | **Template-only compliance**       | All headings exist, but obligations are vague and untestable.    | Looks uniform; fails enforceability and auditability.   | Enforce normative clause hygiene and CC/Solution coherence.          |
 | **SoTA name-dropping**             | SoTA‑Echoing is a list of buzzwords with no stance.              | Breaks evidence lineage; invites monoculture.           | Require adopt/adapt/reject with reasons per item.                    |
 | **Terminology drift by “synonym”** | Authors swap kernel terms for nicer-sounding words.              | Increases ambiguity; harms cross-pattern composability. | Apply PCP‑TERM and require explicit mini-definitions on first use.   |
-| **Typos-first review (lint worship)** | Review time goes to formatting and micro-edits while the normative surface, terms, Bridges, and SoTA stance are barely checked. | Raises editorial cost without raising semantic trust. | Use the triage rule: treat load-bearing surfaces as depth targets; satisfy mechanical checks via auditable lint/harness traces when available. |
+| **Typos-first review (lint worship)** | Review time goes to formatting and micro-edits while the normative surface, terms, Bridges, modularity, slot discipline and SoTA stance are barely checked. | Raises editorial cost without raising semantic trust. | Use the triage rule: treat load-bearing surfaces as depth targets; satisfy mechanical checks via auditable lint/harness traces when available. |
 
 ### E.19:9 - Consequences
 
@@ -28467,7 +28634,7 @@ Bias risks and mitigations:
 | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
 | **Repeatable admission decisions** — reviewers share a common gate language.     | More explicit editorial work; mitigated by a small baseline and triggered profiles.        |
 | **Higher trust in the normative surface** — CC becomes the enforceable contract. | Authors must align prose and CC carefully; mitigated by coherence checks.                  |
-| **Controlled evolution** — refresh runs prevent conceptual bit-rot.              | Periodic workload; mitigated by prioritizing high-dependency and high-risk patterns first. |
+| **Controlled evolution** — runs prevent conceptual bit-rot.              | Periodic workload; mitigated by prioritizing high-dependency and high-risk patterns first. |
 | **Less hidden drift** — terminology and cross-context reuse become explicit.     | Some drafts will be delayed; mitigated by early profile selection during authoring.        |
 
 ### E.19:10 - Rationale
@@ -28485,7 +28652,7 @@ The baseline profile protects cross-pattern comparability and editorial sanity. 
 | Reviews need explicit criteria, not informal taste.                    | Move from folklore validation to explicit validation methods and documented criteria.                       | Riehle et al. (2020), “Pattern Discovery and Validation Using Scientific Research Methods”. | PCPs make criteria explicit; CC coherence is enforced.                                    | **Adopt.** Keep methods lightweight but explicit.                                                            |
 | A stable structure improves comparability and reduces ambiguity.       | Standards specify required viewpoints/concerns and consistency rules for descriptions.                      | ISO/IEC/IEEE 42010:2022 (architecture description).                                         | PCP‑BASE includes structural integrity and internal consistency.                          | **Adopt/Adapt.** Adopt conformance mindset; adapt to pattern-language template and didactic grounding.       |
 | Pattern writing benefits from explicit guidance plus critique culture. | Pattern-language communities emphasize clear template usage, consequences, and critique for quality.        | Iba (2021), “How to Write Patterns …” (PLoP 2021).                                          | Baseline checks enforce meaningful sections; anti-patterns make critique concrete.        | **Adopt.** Directly supports admission quality.                                                              |
-| “Living” guidance needs refresh discipline.                            | Reporting/review guidance is updated and versioned; reviewers must track changes and report deltas clearly. | Page et al. (2021), PRISMA 2020 statement and explanation papers.                           | Refresh runs require explicit update vs scope-limit decisions and deltas in SoTA‑Echoing. | **Adapt.** Use the “versioned guidance + explicit deltas” principle without importing tool/process mandates. |
+| “Living” guidance needs refresh discipline.                            | Reporting/review guidance is updated and versioned; reviewers must track changes and report deltas clearly. | Page et al. (2021), PRISMA 2020 statement and explanation papers.                           | Runs require explicit decisions and deltas in SoTA‑Echoing. | **Adapt.** Use the “versioned guidance + explicit deltas” principle without importing tool/process mandates. |
 
 ### E.19:12 - Relations
 
@@ -28495,6 +28662,7 @@ The baseline profile protects cross-pattern comparability and editorial sanity. 
   * `E.10` (lexical discipline and reserved vocabulary)
   * `E.9` (design rationale records for changes that affect semantics)
   * `E.15` (authoring/evolution protocol; harness mindset; refresh planning)
+  * `A.6.1.5` (Slot discipline)
 * **Coordinates with:**
 
   * `F.8` (mint vs reuse decisions)
@@ -28502,10 +28670,6 @@ The baseline profile protects cross-pattern comparability and editorial sanity. 
   * `F.9` (cross-context alignment discipline)
   * `F.15` (conceptual harness and regression framing)
   * `G.11` (refresh/decay orchestration principles, where applicable)
-* **Constrains:**
-
-  * Admission and refresh decisions for patterns intended for the canonical corpus
-  * Any editorial process that treats Conformance Checklists as enforceable contracts
 
 ### E.19:End
 
