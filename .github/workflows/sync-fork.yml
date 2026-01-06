@@ -1,0 +1,30 @@
+name: Sync fork with upstream
+
+on:
+  # Allow manual runs and scheduled checks to pick up upstream changes.
+  workflow_dispatch:
+  schedule:
+    - cron: "0 * * * *"
+  # Optional hook if the upstream repo sends a repository_dispatch event.
+  repository_dispatch:
+    types: [upstream_update]
+
+permissions:
+  contents: write
+
+env:
+  UPSTREAM_REPO: ${{ github.event.repository.parent.full_name || github.repository }}
+  UPSTREAM_BRANCH: ${{ github.event.repository.parent.default_branch || github.event.repository.default_branch || 'main' }}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync fork into fork branch
+        uses: repo-sync/github-sync@v3
+        with:
+          source_repo: ${{ env.UPSTREAM_REPO }}
+          source_branch: ${{ env.UPSTREAM_BRANCH }}
+          destination_repo: ${{ github.repository }}
+          destination_branch: fork
+          github_token: ${{ secrets.GITHUB_TOKEN }}
