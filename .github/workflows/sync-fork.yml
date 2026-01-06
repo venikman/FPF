@@ -19,11 +19,12 @@ jobs:
       - name: Determine upstream source
         run: |
           parent=$(jq -r '.repository.parent.full_name // empty' "$GITHUB_EVENT_PATH")
-          upstream_branch=$(jq -r '.repository.parent.default_branch // .repository.default_branch // \"main\"' "$GITHUB_EVENT_PATH")
           if [ -z "$parent" ]; then
             echo "SHOULD_SYNC=false" >> "$GITHUB_ENV"
+            echo "Repository is not a fork (no parent repository found), skipping sync."
             exit 0
           fi
+          upstream_branch=$(jq -r '.repository.parent.default_branch // .repository.default_branch // "main"' "$GITHUB_EVENT_PATH")
           echo "SHOULD_SYNC=true" >> "$GITHUB_ENV"
           echo "UPSTREAM_REPO=$parent" >> "$GITHUB_ENV"
           echo "UPSTREAM_BRANCH=$upstream_branch" >> "$GITHUB_ENV"
