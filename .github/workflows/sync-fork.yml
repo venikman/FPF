@@ -20,6 +20,12 @@ jobs:
         run: |
           upstream=$(jq -r '.repository.parent.full_name // .repository.full_name' "$GITHUB_EVENT_PATH")
           upstream_branch=$(jq -r '.repository.parent.default_branch // .repository.default_branch // \"main\"' "$GITHUB_EVENT_PATH")
+          if [ "$upstream" = "null" ] || [ -z "$upstream" ]; then
+            upstream="$GITHUB_REPOSITORY"
+          fi
+          if [ "$upstream_branch" = "null" ] || [ -z "$upstream_branch" ]; then
+            upstream_branch="main"
+          fi
           echo "UPSTREAM_REPO=$upstream" >> "$GITHUB_ENV"
           echo "UPSTREAM_BRANCH=$upstream_branch" >> "$GITHUB_ENV"
 
