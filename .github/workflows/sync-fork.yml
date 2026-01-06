@@ -4,7 +4,7 @@ on:
   # Allow manual runs and scheduled checks to pick up upstream changes.
   workflow_dispatch:
   schedule:
-    - cron: "0 * * * *"
+    - cron: "0 6 * * *"
   # Optional hook if the upstream repo sends a repository_dispatch event.
   repository_dispatch:
     types: [upstream_update]
@@ -23,9 +23,6 @@ jobs:
           if [ -z "$parent" ]; then
             echo "SHOULD_SYNC=false" >> "$GITHUB_ENV"
             exit 0
-          fi
-          if [ "$upstream_branch" = "null" ] || [ -z "$upstream_branch" ]; then
-            upstream_branch="main"
           fi
           echo "SHOULD_SYNC=true" >> "$GITHUB_ENV"
           echo "UPSTREAM_REPO=$parent" >> "$GITHUB_ENV"
