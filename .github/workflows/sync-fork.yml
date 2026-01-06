@@ -1,0 +1,40 @@
+name: Sync fork with upstream
+
+on:
+  # Allow manual runs and scheduled checks to pick up upstream changes.
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * *"
+  # Optional hook if the upstream repo sends a repository_dispatch event.
+  repository_dispatch:
+    types: [upstream_update]
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine upstream source
+        run: |
+          parent=$(jq -r '.repository.parent.full_name // empty' "$GITHUB_EVENT_PATH")
+          if [ -z "$parent" ]; then
+            echo "SHOULD_SYNC=false" >> "$GITHUB_ENV"
+            echo "Repository is not a fork (no parent repository found), skipping sync."
+            exit 0
+          fi
+          upstream_branch=$(jq -r '.repository.parent.default_branch // .repository.default_branch // "main"' "$GITHUB_EVENT_PATH")
+          echo "SHOULD_SYNC=true" >> "$GITHUB_ENV"
+          echo "UPSTREAM_REPO=$parent" >> "$GITHUB_ENV"
+          echo "UPSTREAM_BRANCH=$upstream_branch" >> "$GITHUB_ENV"
+
+      - name: Sync fork into fork branch
+        if: env.SHOULD_SYNC == 'true'
+        uses: repo-sync/github-sync@v3.0.0
+        with:
+          source_repo: ${{ env.UPSTREAM_REPO }}
+          source_branch: ${{ env.UPSTREAM_BRANCH }}
+          destination_repo: ${{ github.repository }}
+          destination_branch: fork
+          github_token: ${{ secrets.GITHUB_TOKEN }}
